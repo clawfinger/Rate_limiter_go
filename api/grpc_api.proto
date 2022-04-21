@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package ratelimiter;
+option go_package = "./;pb";
+
+service Calendar {
+    rpc Validate(LoginAttempt) returns (AttemptResult);
+    rpc DropStats(Stats) returns (OperationResult);
+    rpc AppBlacklist(IP) returns (OperationResult);
+    rpc RemoveBlacklist(IP) returns (OperationResult);
+    rpc AppWhitelist(IP) returns (OperationResult);
+    rpc RemoveWhitelist(IP) returns (OperationResult);
+}
+
+message LoginAttempt {
+    string Login = 1;
+    string IP = 2;
+    string Password = 3;
+}
+
+message AttemptResult {
+    enum AttemptStatus {
+        OK = 0;
+        DENIED = 1;
+    }
+    AttemptStatus result = 1;
+}
+
+message OperationResult {
+    enum ResultStatus {
+        OK = 0;
+        FAIL = 1;
+    }
+    ResultStatus status = 1;
+    string reason = 2;
+}
+
+message Stats {
+    string Login = 1;
+    string IP = 2;
+}
+
+message IP {
+    string IP = 1;
+}
