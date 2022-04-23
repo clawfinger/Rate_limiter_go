@@ -8,7 +8,6 @@ type Data struct {
 	DBData  DatabaseData
 	Logger  LoggerConf
 	Storage Storage
-	HTTP    HTTP
 	Grpc    Grpc
 }
 
@@ -19,18 +18,7 @@ func newConfigData() *Data {
 func (d *Data) SetDefault(v *viper.Viper) {
 	d.Logger.SetDefault(v)
 	d.Storage.SetDefault(v)
-	d.HTTP.SetDefault(v)
 	d.Grpc.SetDefault(v)
-}
-
-type HTTP struct {
-	Addr string
-}
-
-func (d *HTTP) SetDefault(v *viper.Viper) {
-	v.SetDefault("HTTP", map[string]interface{}{
-		"Addr": "127.0.0.1:8080",
-	})
 }
 
 type LoggerConf struct {
@@ -41,7 +29,7 @@ type LoggerConf struct {
 func (d *LoggerConf) SetDefault(v *viper.Viper) {
 	v.SetDefault("Logger", map[string]interface{}{
 		"Level":    "info",
-		"Filename": "calendar.log",
+		"Filename": "limiter.log",
 	})
 }
 

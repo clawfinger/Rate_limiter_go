@@ -1,4 +1,4 @@
-package servers
+package serverctx
 
 import (
 	"github.com/clawfinger/ratelimiter/config"

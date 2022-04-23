@@ -8,4 +8,7 @@ generate:
 		--go-grpc_out=api/generated \
 		api/*.proto
 
-.PHONY: generate
+build:
+	go build -v -o ./bin ./cmd/limiter
+
+.PHONY: generate build

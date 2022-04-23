@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/clawfinger/ratelimiter/config"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -19,8 +18,8 @@ type loggerImpl struct { // TODO
 	zapLogger *zap.SugaredLogger
 }
 
-func New(cfg *config.Config) (Logger, error) {
-	zapLevel, err := loggerLevelFromString(cfg.Data.Logger.Level)
+func New(level string, filename string) (Logger, error) {
+	zapLevel, err := loggerLevelFromString(level)
 	if err != nil {
 		return nil, fmt.Errorf("Error on logger init, Reason: %w", err)
 	}
@@ -29,7 +28,7 @@ func New(cfg *config.Config) (Logger, error) {
 
 	pe.EncodeTime = zapcore.ISO8601TimeEncoder
 	consoleEncoder := zapcore.NewConsoleEncoder(pe)
-	fileSync, _, err := zap.Open(cfg.Data.Logger.Filename)
+	fileSync, _, err := zap.Open(filename)
 	if err != nil {
 		return nil, fmt.Errorf("Error on logger init, Reason: %w", err)
 	}

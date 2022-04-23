@@ -3,12 +3,12 @@ syntax = "proto3";
 package ratelimiter;
 option go_package = "./;pb";
 
-service Calendar {
+service Limiter {
     rpc Validate(LoginAttempt) returns (AttemptResult);
     rpc DropStats(Stats) returns (OperationResult);
-    rpc AppBlacklist(IP) returns (OperationResult);
+    rpc AddBlacklist(IP) returns (OperationResult);
     rpc RemoveBlacklist(IP) returns (OperationResult);
-    rpc AppWhitelist(IP) returns (OperationResult);
+    rpc AddWhitelist(IP) returns (OperationResult);
     rpc RemoveWhitelist(IP) returns (OperationResult);
 }
 
