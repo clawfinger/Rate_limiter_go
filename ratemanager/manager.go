@@ -14,9 +14,9 @@ type BucketData struct {
 }
 
 type RateManager struct {
-	ipBuckets       map[string]*ratelimit.Bucket
-	loginBuckets    map[string]*ratelimit.Bucket
-	passwordBuckets map[string]*ratelimit.Bucket
+	ipBuckets       map[string]BucketData
+	loginBuckets    map[string]BucketData
+	passwordBuckets map[string]BucketData
 	cfg             *config.Config
 	logger          logger.Logger
 }
@@ -25,43 +25,74 @@ func New(cfg *config.Config, logger logger.Logger) *RateManager {
 	return &RateManager{
 		cfg:             cfg,
 		logger:          logger,
-		ipBuckets:       make(map[string]*ratelimit.Bucket),
-		loginBuckets:    make(map[string]*ratelimit.Bucket),
-		passwordBuckets: make(map[string]*ratelimit.Bucket),
+		ipBuckets:       make(map[string]BucketData),
+		loginBuckets:    make(map[string]BucketData),
+		passwordBuckets: make(map[string]BucketData),
 	}
 }
 
-//nolint
-func (m *RateManager) Manage(ip string, login string, password string) bool {
-	ipBucket, ok := m.ipBuckets[ip]
-	if !ok {
-		ipBucket = ratelimit.NewBucket(time.Second, int64(m.cfg.Data.Buckets.IpCapacity))
-		m.ipBuckets[ip] = ipBucket
-	}
-	ipTockensUsed := ipBucket.TakeAvailable(1)
-	if ipTockensUsed == 0 {
-		return false
-	}
+type Result struct {
+	Ok     bool
+	Reason string
+}
 
-	loginBucket, ok := m.loginBuckets[ip]
-	if !ok {
-		loginBucket = ratelimit.NewBucket(time.Second, int64(m.cfg.Data.Buckets.IpCapacity))
-		m.loginBuckets[ip] = loginBucket
+func (m *RateManager) Manage(ip string, login string, password string) *Result {
+	ipOk := m.ManageIP(ip)
+	if !ipOk {
+		return &Result{Ok: false, Reason: "IP denied"}
 	}
-	loginTockensUsed := loginBucket.TakeAvailable(1)
-	if loginTockensUsed == 0 {
-		return false
+	loginOk := m.ManageLogin(login)
+	if !loginOk {
+		return &Result{Ok: false, Reason: "Login denied"}
 	}
+	passOk := m.ManagePassword(password)
+	if !passOk {
+		return &Result{Ok: false, Reason: "Password denied"}
+	}
+	return &Result{
+		Ok:     true,
+		Reason: "success",
+	}
+}
 
-	passwordBucket, ok := m.passwordBuckets[ip]
+func (m *RateManager) ManageIP(ip string) bool {
+	ipBucketData, ok := m.ipBuckets[ip]
 	if !ok {
-		passwordBucket = ratelimit.NewBucket(time.Second, int64(m.cfg.Data.Buckets.IpCapacity))
-		m.passwordBuckets[ip] = passwordBucket
+		ipBucket := ratelimit.NewBucket(time.Second, int64(m.cfg.Data.Buckets.IpCapacity))
+		ipBucketData = BucketData{
+			Bucket:     ipBucket,
+			LastActive: time.Now(),
+		}
+		m.ipBuckets[ip] = ipBucketData
 	}
-	passwordTockensUsed := passwordBucket.TakeAvailable(1)
-	if passwordTockensUsed == 0 {
-		return false
-	}
+	ipTockensUsed := ipBucketData.Bucket.TakeAvailable(1)
+	return ipTockensUsed != 0
+}
 
-	return true
+func (m *RateManager) ManageLogin(login string) bool {
+	loginBucketData, ok := m.loginBuckets[login]
+	if !ok {
+		ipBucket := ratelimit.NewBucket(time.Second, int64(m.cfg.Data.Buckets.LoginCapacity))
+		loginBucketData = BucketData{
+			Bucket:     ipBucket,
+			LastActive: time.Now(),
+		}
+		m.loginBuckets[login] = loginBucketData
+	}
+	loginTockensUsed := loginBucketData.Bucket.TakeAvailable(1)
+	return loginTockensUsed != 0
+}
+
+func (m *RateManager) ManagePassword(pass string) bool {
+	passwordBucketData, ok := m.passwordBuckets[pass]
+	if !ok {
+		ipBucket := ratelimit.NewBucket(time.Second, int64(m.cfg.Data.Buckets.PasswordCapacity))
+		passwordBucketData = BucketData{
+			Bucket:     ipBucket,
+			LastActive: time.Now(),
+		}
+		m.passwordBuckets[pass] = passwordBucketData
+	}
+	passwordTockensUsed := passwordBucketData.Bucket.TakeAvailable(1)
+	return passwordTockensUsed != 0
 }

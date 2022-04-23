@@ -21,7 +21,10 @@ func TestIPLimit(t *testing.T) {
 	pass := "12345"
 	manager := manager.New(config, loggerMock)
 	for i := 0; i < 10; i++ {
-		require.Truef(t, manager.Manage(ip, login, pass), "Denied illegaly")
+		res := manager.Manage(ip, login, pass)
+		require.Truef(t, res.Ok, res.Reason)
+
 	}
-	require.Falsef(t, manager.Manage(ip, login, pass), "Passed illegaly")
+	res := manager.Manage(ip, login, pass)
+	require.Falsef(t, res.Ok, res.Reason)
 }
