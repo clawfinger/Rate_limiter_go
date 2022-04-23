@@ -1,14 +1,16 @@
 package config
 
 import (
+	"time"
+
 	"github.com/spf13/viper"
 )
 
 type Data struct {
 	DBData  DatabaseData
 	Logger  LoggerConf
-	Storage Storage
 	Grpc    Grpc
+	Buckets Buckets
 }
 
 func newConfigData() *Data {
@@ -17,8 +19,8 @@ func newConfigData() *Data {
 
 func (d *Data) SetDefault(v *viper.Viper) {
 	d.Logger.SetDefault(v)
-	d.Storage.SetDefault(v)
 	d.Grpc.SetDefault(v)
+	d.Buckets.SetDefault(v)
 }
 
 type LoggerConf struct {
@@ -38,16 +40,6 @@ type DatabaseData struct {
 	Password string
 }
 
-type Storage struct {
-	Type string
-}
-
-func (d *Storage) SetDefault(v *viper.Viper) {
-	v.SetDefault("storage", map[string]interface{}{
-		"Type": "inmemory",
-	})
-}
-
 type Grpc struct {
 	Addr string
 }
@@ -55,5 +47,21 @@ type Grpc struct {
 func (d *Grpc) SetDefault(v *viper.Viper) {
 	v.SetDefault("Grpc", map[string]interface{}{
 		"Addr": "127.0.0.1:50051",
+	})
+}
+
+type Buckets struct {
+	IpCapacity       uint
+	LoginCapacity    uint
+	PasswordCapacity uint
+	BucketDecayTime  time.Duration
+}
+
+func (b *Buckets) SetDefault(v *viper.Viper) {
+	v.SetDefault("Buckets", map[string]interface{}{
+		"IpCapacity":       "1000",
+		"LoginCapacity":    "10",
+		"PasswordCapacity": "100",
+		"BucketDecayTime":  "1m",
 	})
 }
