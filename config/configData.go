@@ -30,7 +30,7 @@ type LoggerConf struct {
 
 func (d *LoggerConf) SetDefault(v *viper.Viper) {
 	v.SetDefault("Logger", map[string]interface{}{
-		"Level":    "info",
+		"Level":    "debug",
 		"Filename": "limiter.log",
 	})
 }

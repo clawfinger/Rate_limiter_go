@@ -1,6 +1,8 @@
 package manager
 
 import (
+	"context"
+	"sync"
 	"time"
 
 	"github.com/clawfinger/ratelimiter/config"
@@ -13,21 +15,83 @@ type BucketData struct {
 	LastActive time.Time
 }
 
+type AbstractRateManager interface {
+	Manage(ip string, login string, password string) *Result
+	DropStats(login string, ip string)
+}
+
 type RateManager struct {
 	ipBuckets       map[string]BucketData
 	loginBuckets    map[string]BucketData
 	passwordBuckets map[string]BucketData
 	cfg             *config.Config
 	logger          logger.Logger
+	mutex           sync.Mutex
+	ctx             context.Context
+	cancFunc        context.CancelFunc
 }
 
 func New(cfg *config.Config, logger logger.Logger) *RateManager {
+	ctx, cancFunc := context.WithCancel(context.Background())
 	return &RateManager{
 		cfg:             cfg,
 		logger:          logger,
 		ipBuckets:       make(map[string]BucketData),
 		loginBuckets:    make(map[string]BucketData),
 		passwordBuckets: make(map[string]BucketData),
+		ctx:             ctx,
+		cancFunc:        cancFunc,
+	}
+}
+
+func (m *RateManager) Start() {
+	go func() {
+		done := m.ctx.Done()
+		ticker := time.NewTicker(time.Minute)
+		for {
+			select {
+			case <-done:
+				return
+			case <-ticker.C:
+				m.Cleanup()
+			}
+		}
+	}()
+}
+
+func (m *RateManager) Stop() {
+	m.cancFunc()
+}
+
+func (m *RateManager) Cleanup() {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	deadline := m.cfg.Data.Buckets.BucketDecayTime
+	now := time.Now()
+
+	for ip, bucketData := range m.ipBuckets {
+		diff := now.Sub(bucketData.LastActive)
+		if diff >= deadline {
+			delete(m.ipBuckets, ip)
+			m.logger.Debug("Cleaning ip", ip)
+		}
+	}
+
+	for login, bucketData := range m.loginBuckets {
+		diff := now.Sub(bucketData.LastActive)
+		if diff >= deadline {
+			delete(m.loginBuckets, login)
+			m.logger.Debug("Cleaning login", login)
+		}
+	}
+
+	for password, bucketData := range m.passwordBuckets {
+		diff := now.Sub(bucketData.LastActive)
+		if diff >= deadline {
+			delete(m.passwordBuckets, password)
+			m.logger.Debug("Cleaning password", password)
+		}
 	}
 }
 
@@ -56,6 +120,8 @@ func (m *RateManager) Manage(ip string, login string, password string) *Result {
 }
 
 func (m *RateManager) ManageIP(ip string) bool {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
 	ipBucketData, ok := m.ipBuckets[ip]
 	if !ok {
 		ipBucket := ratelimit.NewBucket(time.Second, int64(m.cfg.Data.Buckets.IpCapacity))
@@ -70,11 +136,13 @@ func (m *RateManager) ManageIP(ip string) bool {
 }
 
 func (m *RateManager) ManageLogin(login string) bool {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
 	loginBucketData, ok := m.loginBuckets[login]
 	if !ok {
-		ipBucket := ratelimit.NewBucket(time.Second, int64(m.cfg.Data.Buckets.LoginCapacity))
+		loginBucket := ratelimit.NewBucket(time.Second, int64(m.cfg.Data.Buckets.LoginCapacity))
 		loginBucketData = BucketData{
-			Bucket:     ipBucket,
+			Bucket:     loginBucket,
 			LastActive: time.Now(),
 		}
 		m.loginBuckets[login] = loginBucketData
@@ -84,15 +152,35 @@ func (m *RateManager) ManageLogin(login string) bool {
 }
 
 func (m *RateManager) ManagePassword(pass string) bool {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
 	passwordBucketData, ok := m.passwordBuckets[pass]
 	if !ok {
-		ipBucket := ratelimit.NewBucket(time.Second, int64(m.cfg.Data.Buckets.PasswordCapacity))
+		passwordBucket := ratelimit.NewBucket(time.Second, int64(m.cfg.Data.Buckets.PasswordCapacity))
 		passwordBucketData = BucketData{
-			Bucket:     ipBucket,
+			Bucket:     passwordBucket,
 			LastActive: time.Now(),
 		}
 		m.passwordBuckets[pass] = passwordBucketData
 	}
 	passwordTockensUsed := passwordBucketData.Bucket.TakeAvailable(1)
 	return passwordTockensUsed != 0
+}
+
+func (m *RateManager) DropStats(login string, ip string) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+	loginBucket := ratelimit.NewBucket(time.Second, int64(m.cfg.Data.Buckets.LoginCapacity))
+	loginBucketData := BucketData{
+		Bucket:     loginBucket,
+		LastActive: time.Now(),
+	}
+	m.loginBuckets[login] = loginBucketData
+
+	ipBucket := ratelimit.NewBucket(time.Second, int64(m.cfg.Data.Buckets.IpCapacity))
+	ipBucketData := BucketData{
+		Bucket:     ipBucket,
+		LastActive: time.Now(),
+	}
+	m.ipBuckets[ip] = ipBucketData
 }

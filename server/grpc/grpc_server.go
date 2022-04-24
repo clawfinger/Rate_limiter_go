@@ -38,14 +38,26 @@ func (s *GrpcServer) Stop() error {
 	return nil
 }
 
-func (s *GrpcServer) Validate(context.Context, *pb.LoginAttempt) (*pb.AttemptResult, error) {
-	res := &pb.AttemptResult{}
-	res.Result = pb.AttemptResult_DENIED
-	return res, nil
+func (s *GrpcServer) Validate(ctx context.Context, attempt *pb.LoginAttempt) (*pb.AttemptResult, error) {
+	answer := &pb.AttemptResult{}
+
+	result := s.context.RateManager.Manage(attempt.IP, attempt.Login, attempt.Password)
+
+	s.context.Logger.Info("Validation result for request", "ip", attempt.IP, "login", attempt.Login,
+		"password", attempt.Password, "status", result.Ok, "reason", result.Reason)
+	if result.Ok {
+		answer.Result = pb.AttemptResult_OK
+	} else {
+		answer.Result = pb.AttemptResult_DENIED
+	}
+	return answer, nil
 }
 
-func (s *GrpcServer) DropStats(context.Context, *pb.Stats) (*pb.OperationResult, error) {
+func (s *GrpcServer) DropStats(ctx context.Context, stats *pb.Stats) (*pb.OperationResult, error) {
 	res := &pb.OperationResult{}
+
+	s.context.RateManager.DropStats(stats.Login, stats.IP)
+
 	res.Status = pb.OperationResult_OK
 	res.Reason = "DropStats ok"
 	return res, nil

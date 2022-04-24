@@ -11,6 +11,7 @@ import (
 
 	"github.com/clawfinger/ratelimiter/config"
 	"github.com/clawfinger/ratelimiter/logger"
+	manager "github.com/clawfinger/ratelimiter/ratemanager"
 	ratelimiter "github.com/clawfinger/ratelimiter/root"
 	serverctx "github.com/clawfinger/ratelimiter/server"
 	grpcserver "github.com/clawfinger/ratelimiter/server/grpc"
@@ -39,9 +40,12 @@ func main() {
 				return
 			}
 
-			serverContext := serverctx.NewServerContext(config, logger)
+			manager := manager.New(config, logger)
+			manager.Start()
+			serverContext := serverctx.NewServerContext(config, logger, manager)
 			grpcServer := grpcserver.NewGrpcServer(serverContext)
 			defer grpcServer.Stop()
+			defer manager.Stop()
 			app := ratelimiter.New(config, logger, grpcServer)
 
 			app.Start(ctx)
