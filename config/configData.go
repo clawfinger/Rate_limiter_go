@@ -7,10 +7,11 @@ import (
 )
 
 type Data struct {
-	DBData  DatabaseData
-	Logger  LoggerConf
-	Grpc    Grpc
-	Buckets Buckets
+	DBData    DatabaseData
+	Logger    LoggerConf
+	Grpc      Grpc
+	Buckets   Buckets
+	RedisData RedisData
 }
 
 func newConfigData() *Data {
@@ -21,6 +22,7 @@ func (d *Data) SetDefault(v *viper.Viper) {
 	d.Logger.SetDefault(v)
 	d.Grpc.SetDefault(v)
 	d.Buckets.SetDefault(v)
+	d.RedisData.SetDefault(v)
 }
 
 type LoggerConf struct {
@@ -38,6 +40,18 @@ func (d *LoggerConf) SetDefault(v *viper.Viper) {
 type DatabaseData struct {
 	Username string
 	Password string
+}
+
+type RedisData struct {
+	Addr      string
+	OpTimeout time.Duration
+}
+
+func (d *RedisData) SetDefault(v *viper.Viper) {
+	v.SetDefault("RedisData", map[string]interface{}{
+		"Addr":      "localhost:6379",
+		"OpTimeout": "500ms",
+	})
 }
 
 type Grpc struct {
