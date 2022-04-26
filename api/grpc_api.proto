@@ -6,10 +6,10 @@ option go_package = "./;pb";
 service Limiter {
     rpc Validate(LoginAttempt) returns (AttemptResult);
     rpc DropStats(Stats) returns (OperationResult);
-    rpc AddBlacklist(IP) returns (OperationResult);
-    rpc RemoveBlacklist(IP) returns (OperationResult);
-    rpc AddWhitelist(IP) returns (OperationResult);
-    rpc RemoveWhitelist(IP) returns (OperationResult);
+    rpc AddBlacklist(Subnet) returns (OperationResult);
+    rpc RemoveBlacklist(Subnet) returns (OperationResult);
+    rpc AddWhitelist(Subnet) returns (OperationResult);
+    rpc RemoveWhitelist(Subnet) returns (OperationResult);
 }
 
 message LoginAttempt {
@@ -40,6 +40,6 @@ message Stats {
     string IP = 2;
 }
 
-message IP {
-    string IP = 1;
+message Subnet {
+    string IPWithMask = 1;
 }

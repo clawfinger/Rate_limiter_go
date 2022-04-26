@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"net"
 
 	"github.com/clawfinger/ratelimiter/config"
 	"github.com/clawfinger/ratelimiter/logger"
@@ -9,8 +10,10 @@ import (
 )
 
 const (
-	whitelistedVal = "whitelist"
-	blacklistedVal = "blacklist"
+	whiteLabel = "whitelist"
+	blackLabel = "blacklist"
+	whiteKey   = "whiteKey"
+	blackKey   = "blackKey"
 )
 
 type Restriction uint8
@@ -27,8 +30,9 @@ type Result struct {
 }
 
 type AbstractStorage interface {
-	CheckIP(ip string) *Result
-	SetIP(ip string, restriction Restriction)
+	CheckIP(ctx context.Context, ip string) *Result
+	SetIP(ctx context.Context, ip string, restriction Restriction)
+	RemoveIP(ctx context.Context, ip string, restriction Restriction)
 }
 
 type Storage struct {
@@ -63,41 +67,107 @@ func NewResult(status Restriction, reason string) *Result {
 	}
 }
 
-func (s *Storage) CheckIP(ip string) *Result {
-	ctx, cancFunc := context.WithTimeout(context.Background(), s.cfg.Data.RedisData.OpTimeout)
+func (s *Storage) CheckBlacklist(ctx context.Context, ip net.IP) (bool, *Result) {
+	ctx, cancFunc := context.WithTimeout(ctx, s.cfg.Data.RedisData.OpTimeout)
+	result := s.client.HGetAll(ctx, blackKey)
 	defer cancFunc()
-	val, err := s.client.Get(ctx, ip).Result()
-	if err != nil {
-		if err == redis.Nil {
-			return NewResult(Not_set, "not set")
-		} else {
-			s.logger.Error("Got error on redis read", err.Error())
-			return NewResult(Blacklisted, "redis error")
+	if result.Err() != nil {
+		s.logger.Info("Error on gettting blacklist", result.Err().Error())
+		return false, NewResult(Not_set, "db error")
+	}
+	for subnetString := range result.Val() {
+		_, subnet, err := net.ParseCIDR(subnetString)
+		if err != nil {
+			s.logger.Info("Error parsing ip subnet string from db", err.Error())
+			continue
+		}
+		if subnet.Contains(ip) {
+			return true, NewResult(Blacklisted, "Blacklisted")
 		}
 	}
-	switch val {
-	case whitelistedVal:
-		return NewResult(Whitelisted, "whitelisted")
-	case blacklistedVal:
-		return NewResult(Blacklisted, "blacklisted")
-	default:
-		return NewResult(Blacklisted, "value is wrong")
+	return false, NewResult(Not_set, "not in a blacklist")
+}
+
+func (s *Storage) CheckWhitelistt(ctx context.Context, ip net.IP) (bool, *Result) {
+	ctx, cancFunc := context.WithTimeout(ctx, s.cfg.Data.RedisData.OpTimeout)
+	result := s.client.HGetAll(ctx, whiteKey)
+	defer cancFunc()
+	if result.Err() != nil {
+		s.logger.Info("Error on gettting whitelist", result.Err().Error())
+		return false, NewResult(Not_set, "db error")
+	}
+	for subnetString := range result.Val() {
+		_, subnet, err := net.ParseCIDR(subnetString)
+		if err != nil {
+			s.logger.Info("Error parsing ip subnet string from db", err.Error())
+			continue
+		}
+		if subnet.Contains(ip) {
+			return true, NewResult(Whitelisted, "Whitelisted")
+		}
+	}
+
+	return false, NewResult(Not_set, "not set in lists")
+}
+
+func (s *Storage) CheckIP(ctx context.Context, ipString string) *Result {
+	ip := net.ParseIP(ipString)
+	if ip == nil {
+		s.logger.Info("Error parsing ip subnet string from db", ipString)
+		return NewResult(Not_set, "error parsing ip")
+	}
+
+	filtered, result := s.CheckBlacklist(ctx, ip)
+	if filtered {
+		return result
+	}
+	filtered, result = s.CheckWhitelistt(ctx, ip)
+	if filtered {
+		return result
+	}
+	return NewResult(Not_set, "not set in lists")
+}
+
+func (s *Storage) SetIP(ctx context.Context, ip string, restriction Restriction) {
+	ctx, cancFunc := context.WithTimeout(ctx, s.cfg.Data.RedisData.OpTimeout)
+	defer cancFunc()
+	switch restriction {
+	case Whitelisted:
+		result := s.client.HSet(ctx, whiteKey, ip, whiteLabel)
+		if result.Err() != nil {
+			s.logger.Info("Error on adding ip to whitelist", result.Err().Error())
+			return
+		}
+		s.logger.Info("Added", result.Val(), "entries to whitelists")
+
+	case Blacklisted:
+		result := s.client.HSet(ctx, blackKey, ip, blackLabel)
+		if result.Err() != nil {
+			s.logger.Info("Error on adding ip to blacklist", result.Err().Error())
+			return
+		}
+		s.logger.Info("Added", result.Val(), "entries to blacklist")
 	}
 }
 
-func (s *Storage) SetIP(ip string, restriction Restriction) {
-	value := ""
+func (s *Storage) RemoveIP(ctx context.Context, ip string, restriction Restriction) {
+	ctx, cancFunc := context.WithTimeout(ctx, s.cfg.Data.RedisData.OpTimeout)
+	defer cancFunc()
 	switch restriction {
 	case Whitelisted:
-		value = whitelistedVal
-	case Blacklisted:
-		value = blacklistedVal
-	}
+		result := s.client.HDel(ctx, whiteKey, ip)
+		if result.Err() != nil {
+			s.logger.Info("Error on removing ip from whitelist", result.Err().Error())
+			return
+		}
+		s.logger.Info("Deleted", result.Val(), "entries from whitelists")
 
-	ctx, cancFunc := context.WithTimeout(context.Background(), s.cfg.Data.RedisData.OpTimeout)
-	defer cancFunc()
-	err := s.client.Set(ctx, ip, value, 0).Err()
-	if err != nil {
-		s.logger.Error("Got error on redis write", err.Error())
+	case Blacklisted:
+		result := s.client.HDel(ctx, blackKey, ip)
+		if result.Err() != nil {
+			s.logger.Info("Error on removing ip from blacklist", result.Err().Error())
+			return
+		}
+		s.logger.Info("Deleted", result.Val(), "entries from blacklist")
 	}
 }

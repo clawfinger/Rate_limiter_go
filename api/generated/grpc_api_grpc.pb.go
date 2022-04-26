@@ -20,10 +20,10 @@ const _ = grpc.SupportPackageIsVersion7
 type LimiterClient interface {
 	Validate(ctx context.Context, in *LoginAttempt, opts ...grpc.CallOption) (*AttemptResult, error)
 	DropStats(ctx context.Context, in *Stats, opts ...grpc.CallOption) (*OperationResult, error)
-	AddBlacklist(ctx context.Context, in *IP, opts ...grpc.CallOption) (*OperationResult, error)
-	RemoveBlacklist(ctx context.Context, in *IP, opts ...grpc.CallOption) (*OperationResult, error)
-	AddWhitelist(ctx context.Context, in *IP, opts ...grpc.CallOption) (*OperationResult, error)
-	RemoveWhitelist(ctx context.Context, in *IP, opts ...grpc.CallOption) (*OperationResult, error)
+	AddBlacklist(ctx context.Context, in *Subnet, opts ...grpc.CallOption) (*OperationResult, error)
+	RemoveBlacklist(ctx context.Context, in *Subnet, opts ...grpc.CallOption) (*OperationResult, error)
+	AddWhitelist(ctx context.Context, in *Subnet, opts ...grpc.CallOption) (*OperationResult, error)
+	RemoveWhitelist(ctx context.Context, in *Subnet, opts ...grpc.CallOption) (*OperationResult, error)
 }
 
 type limiterClient struct {
@@ -52,7 +52,7 @@ func (c *limiterClient) DropStats(ctx context.Context, in *Stats, opts ...grpc.C
 	return out, nil
 }
 
-func (c *limiterClient) AddBlacklist(ctx context.Context, in *IP, opts ...grpc.CallOption) (*OperationResult, error) {
+func (c *limiterClient) AddBlacklist(ctx context.Context, in *Subnet, opts ...grpc.CallOption) (*OperationResult, error) {
 	out := new(OperationResult)
 	err := c.cc.Invoke(ctx, "/ratelimiter.Limiter/AddBlacklist", in, out, opts...)
 	if err != nil {
@@ -61,7 +61,7 @@ func (c *limiterClient) AddBlacklist(ctx context.Context, in *IP, opts ...grpc.C
 	return out, nil
 }
 
-func (c *limiterClient) RemoveBlacklist(ctx context.Context, in *IP, opts ...grpc.CallOption) (*OperationResult, error) {
+func (c *limiterClient) RemoveBlacklist(ctx context.Context, in *Subnet, opts ...grpc.CallOption) (*OperationResult, error) {
 	out := new(OperationResult)
 	err := c.cc.Invoke(ctx, "/ratelimiter.Limiter/RemoveBlacklist", in, out, opts...)
 	if err != nil {
@@ -70,7 +70,7 @@ func (c *limiterClient) RemoveBlacklist(ctx context.Context, in *IP, opts ...grp
 	return out, nil
 }
 
-func (c *limiterClient) AddWhitelist(ctx context.Context, in *IP, opts ...grpc.CallOption) (*OperationResult, error) {
+func (c *limiterClient) AddWhitelist(ctx context.Context, in *Subnet, opts ...grpc.CallOption) (*OperationResult, error) {
 	out := new(OperationResult)
 	err := c.cc.Invoke(ctx, "/ratelimiter.Limiter/AddWhitelist", in, out, opts...)
 	if err != nil {
@@ -79,7 +79,7 @@ func (c *limiterClient) AddWhitelist(ctx context.Context, in *IP, opts ...grpc.C
 	return out, nil
 }
 
-func (c *limiterClient) RemoveWhitelist(ctx context.Context, in *IP, opts ...grpc.CallOption) (*OperationResult, error) {
+func (c *limiterClient) RemoveWhitelist(ctx context.Context, in *Subnet, opts ...grpc.CallOption) (*OperationResult, error) {
 	out := new(OperationResult)
 	err := c.cc.Invoke(ctx, "/ratelimiter.Limiter/RemoveWhitelist", in, out, opts...)
 	if err != nil {
@@ -94,10 +94,10 @@ func (c *limiterClient) RemoveWhitelist(ctx context.Context, in *IP, opts ...grp
 type LimiterServer interface {
 	Validate(context.Context, *LoginAttempt) (*AttemptResult, error)
 	DropStats(context.Context, *Stats) (*OperationResult, error)
-	AddBlacklist(context.Context, *IP) (*OperationResult, error)
-	RemoveBlacklist(context.Context, *IP) (*OperationResult, error)
-	AddWhitelist(context.Context, *IP) (*OperationResult, error)
-	RemoveWhitelist(context.Context, *IP) (*OperationResult, error)
+	AddBlacklist(context.Context, *Subnet) (*OperationResult, error)
+	RemoveBlacklist(context.Context, *Subnet) (*OperationResult, error)
+	AddWhitelist(context.Context, *Subnet) (*OperationResult, error)
+	RemoveWhitelist(context.Context, *Subnet) (*OperationResult, error)
 	mustEmbedUnimplementedLimiterServer()
 }
 
@@ -111,16 +111,16 @@ func (UnimplementedLimiterServer) Validate(context.Context, *LoginAttempt) (*Att
 func (UnimplementedLimiterServer) DropStats(context.Context, *Stats) (*OperationResult, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DropStats not implemented")
 }
-func (UnimplementedLimiterServer) AddBlacklist(context.Context, *IP) (*OperationResult, error) {
+func (UnimplementedLimiterServer) AddBlacklist(context.Context, *Subnet) (*OperationResult, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddBlacklist not implemented")
 }
-func (UnimplementedLimiterServer) RemoveBlacklist(context.Context, *IP) (*OperationResult, error) {
+func (UnimplementedLimiterServer) RemoveBlacklist(context.Context, *Subnet) (*OperationResult, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveBlacklist not implemented")
 }
-func (UnimplementedLimiterServer) AddWhitelist(context.Context, *IP) (*OperationResult, error) {
+func (UnimplementedLimiterServer) AddWhitelist(context.Context, *Subnet) (*OperationResult, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddWhitelist not implemented")
 }
-func (UnimplementedLimiterServer) RemoveWhitelist(context.Context, *IP) (*OperationResult, error) {
+func (UnimplementedLimiterServer) RemoveWhitelist(context.Context, *Subnet) (*OperationResult, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveWhitelist not implemented")
 }
 func (UnimplementedLimiterServer) mustEmbedUnimplementedLimiterServer() {}
@@ -173,7 +173,7 @@ func _Limiter_DropStats_Handler(srv interface{}, ctx context.Context, dec func(i
 }
 
 func _Limiter_AddBlacklist_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(IP)
+	in := new(Subnet)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -185,13 +185,13 @@ func _Limiter_AddBlacklist_Handler(srv interface{}, ctx context.Context, dec fun
 		FullMethod: "/ratelimiter.Limiter/AddBlacklist",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(LimiterServer).AddBlacklist(ctx, req.(*IP))
+		return srv.(LimiterServer).AddBlacklist(ctx, req.(*Subnet))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Limiter_RemoveBlacklist_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(IP)
+	in := new(Subnet)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -203,13 +203,13 @@ func _Limiter_RemoveBlacklist_Handler(srv interface{}, ctx context.Context, dec 
 		FullMethod: "/ratelimiter.Limiter/RemoveBlacklist",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(LimiterServer).RemoveBlacklist(ctx, req.(*IP))
+		return srv.(LimiterServer).RemoveBlacklist(ctx, req.(*Subnet))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Limiter_AddWhitelist_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(IP)
+	in := new(Subnet)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -221,13 +221,13 @@ func _Limiter_AddWhitelist_Handler(srv interface{}, ctx context.Context, dec fun
 		FullMethod: "/ratelimiter.Limiter/AddWhitelist",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(LimiterServer).AddWhitelist(ctx, req.(*IP))
+		return srv.(LimiterServer).AddWhitelist(ctx, req.(*Subnet))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Limiter_RemoveWhitelist_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(IP)
+	in := new(Subnet)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -239,7 +239,7 @@ func _Limiter_RemoveWhitelist_Handler(srv interface{}, ctx context.Context, dec 
 		FullMethod: "/ratelimiter.Limiter/RemoveWhitelist",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(LimiterServer).RemoveWhitelist(ctx, req.(*IP))
+		return srv.(LimiterServer).RemoveWhitelist(ctx, req.(*Subnet))
 	}
 	return interceptor(ctx, in, info, handler)
 }
