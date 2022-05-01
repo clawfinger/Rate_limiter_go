@@ -34,9 +34,8 @@ func (s *GrpcServer) Start() error {
 	return s.server.Serve(lsn)
 }
 
-func (s *GrpcServer) Stop() error {
+func (s *GrpcServer) Stop() {
 	s.server.Stop()
-	return nil
 }
 
 func (s *GrpcServer) Validate(ctx context.Context, attempt *pb.LoginAttempt) (*pb.AttemptResult, error) {
