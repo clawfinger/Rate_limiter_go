@@ -23,4 +23,8 @@ install-lint-deps:
 lint: install-lint-deps
 	$(shell go env GOPATH)/bin/golangci-lint run ./...
 
-.PHONY: generate build
+run:
+	./bin/limiter -c ./configs/config.json
+
+
+.PHONY: generate build db test install-lint-deps lint run

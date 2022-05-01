@@ -1,0 +1,19 @@
+{
+  "buckets": {
+    "bucketdecaytime": "1m",
+    "ipcapacity": "1000",
+    "logincapacity": "10",
+    "passwordcapacity": "100"
+  },
+  "grpc": {
+    "addr": "127.0.0.1:50051"
+  },
+  "logger": {
+    "filename": "limiter.log",
+    "level": "debug"
+  },
+  "redisdata": {
+    "addr": "localhost:6379",
+    "optimeout": "500ms"
+  }
+}
