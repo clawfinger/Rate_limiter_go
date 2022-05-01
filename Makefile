@@ -14,4 +14,10 @@ build:
 db:
 	docker start redis || docker run -p 6379:6379 -d redis
 
+test:
+	go test ./tests -race -count 10
+
+lint:
+	golangci-lint run
+
 .PHONY: generate build

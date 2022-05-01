@@ -65,7 +65,7 @@ func (d *Grpc) SetDefault(v *viper.Viper) {
 }
 
 type Buckets struct {
-	IpCapacity       uint
+	IPCapacity       uint
 	LoginCapacity    uint
 	PasswordCapacity uint
 	BucketDecayTime  time.Duration
@@ -73,7 +73,7 @@ type Buckets struct {
 
 func (b *Buckets) SetDefault(v *viper.Viper) {
 	v.SetDefault("Buckets", map[string]interface{}{
-		"IpCapacity":       "1000",
+		"IPCapacity":       "1000",
 		"LoginCapacity":    "10",
 		"PasswordCapacity": "100",
 		"BucketDecayTime":  "1m",

@@ -124,7 +124,7 @@ func (m *RateManager) ManageIP(ip string) bool {
 	defer m.mutex.Unlock()
 	ipBucketData, ok := m.ipBuckets[ip]
 	if !ok {
-		ipBucket := ratelimit.NewBucket(time.Second, int64(m.cfg.Data.Buckets.IpCapacity))
+		ipBucket := ratelimit.NewBucket(time.Second, int64(m.cfg.Data.Buckets.IPCapacity))
 		ipBucketData = BucketData{
 			Bucket:     ipBucket,
 			LastActive: time.Now(),
@@ -177,7 +177,7 @@ func (m *RateManager) DropStats(login string, ip string) {
 	}
 	m.loginBuckets[login] = loginBucketData
 
-	ipBucket := ratelimit.NewBucket(time.Second, int64(m.cfg.Data.Buckets.IpCapacity))
+	ipBucket := ratelimit.NewBucket(time.Second, int64(m.cfg.Data.Buckets.IPCapacity))
 	ipBucketData := BucketData{
 		Bucket:     ipBucket,
 		LastActive: time.Now(),

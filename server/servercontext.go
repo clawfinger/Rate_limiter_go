@@ -15,11 +15,11 @@ type ServerCommonContext struct {
 }
 
 func NewServerContext(cfg *config.Config, logger logger.Logger,
-	RateManager manager.AbstractRateManager, Storage storage.AbstractStorage) *ServerCommonContext {
+	ratemanager manager.AbstractRateManager, storage storage.AbstractStorage) *ServerCommonContext {
 	return &ServerCommonContext{
 		Cfg:         cfg,
 		Logger:      logger,
-		RateManager: RateManager,
-		Storage:     Storage,
+		RateManager: ratemanager,
+		Storage:     storage,
 	}
 }

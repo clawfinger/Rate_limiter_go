@@ -19,7 +19,7 @@ const (
 type Restriction uint8
 
 const (
-	Not_set     Restriction = 0
+	NotSet      Restriction = 0
 	Whitelisted Restriction = 1
 	Blacklisted Restriction = 2
 )
@@ -73,7 +73,7 @@ func (s *Storage) CheckBlacklist(ctx context.Context, ip net.IP) (bool, *Result)
 	defer cancFunc()
 	if result.Err() != nil {
 		s.logger.Info("Error on gettting blacklist", result.Err().Error())
-		return false, NewResult(Not_set, "db error")
+		return false, NewResult(NotSet, "db error")
 	}
 	for subnetString := range result.Val() {
 		_, subnet, err := net.ParseCIDR(subnetString)
@@ -85,7 +85,7 @@ func (s *Storage) CheckBlacklist(ctx context.Context, ip net.IP) (bool, *Result)
 			return true, NewResult(Blacklisted, "Blacklisted")
 		}
 	}
-	return false, NewResult(Not_set, "not in a blacklist")
+	return false, NewResult(NotSet, "not in a blacklist")
 }
 
 func (s *Storage) CheckWhitelistt(ctx context.Context, ip net.IP) (bool, *Result) {
@@ -94,7 +94,7 @@ func (s *Storage) CheckWhitelistt(ctx context.Context, ip net.IP) (bool, *Result
 	defer cancFunc()
 	if result.Err() != nil {
 		s.logger.Info("Error on gettting whitelist", result.Err().Error())
-		return false, NewResult(Not_set, "db error")
+		return false, NewResult(NotSet, "db error")
 	}
 	for subnetString := range result.Val() {
 		_, subnet, err := net.ParseCIDR(subnetString)
@@ -107,14 +107,14 @@ func (s *Storage) CheckWhitelistt(ctx context.Context, ip net.IP) (bool, *Result
 		}
 	}
 
-	return false, NewResult(Not_set, "not set in lists")
+	return false, NewResult(NotSet, "not set in lists")
 }
 
 func (s *Storage) CheckIP(ctx context.Context, ipString string) *Result {
 	ip := net.ParseIP(ipString)
 	if ip == nil {
 		s.logger.Info("Error parsing ip subnet string from db", ipString)
-		return NewResult(Not_set, "error parsing ip")
+		return NewResult(NotSet, "error parsing ip")
 	}
 
 	filtered, result := s.CheckBlacklist(ctx, ip)
@@ -125,7 +125,7 @@ func (s *Storage) CheckIP(ctx context.Context, ipString string) *Result {
 	if filtered {
 		return result
 	}
-	return NewResult(Not_set, "not set in lists")
+	return NewResult(NotSet, "not set in lists")
 }
 
 func (s *Storage) SetIP(ctx context.Context, ip string, restriction Restriction) {
@@ -147,6 +147,8 @@ func (s *Storage) SetIP(ctx context.Context, ip string, restriction Restriction)
 			return
 		}
 		s.logger.Info("Added", result.Val(), "entries to blacklist")
+	case NotSet:
+		return
 	}
 }
 
@@ -161,7 +163,6 @@ func (s *Storage) RemoveIP(ctx context.Context, ip string, restriction Restricti
 			return
 		}
 		s.logger.Info("Deleted", result.Val(), "entries from whitelists")
-
 	case Blacklisted:
 		result := s.client.HDel(ctx, blackKey, ip)
 		if result.Err() != nil {
@@ -169,5 +170,7 @@ func (s *Storage) RemoveIP(ctx context.Context, ip string, restriction Restricti
 			return
 		}
 		s.logger.Info("Deleted", result.Val(), "entries from blacklist")
+	case NotSet:
+		return
 	}
 }

@@ -1,7 +1,6 @@
 package test
 
-type LoggerMock struct {
-}
+type LoggerMock struct{}
 
 func (l *LoggerMock) Info(args ...interface{}) {
 }
