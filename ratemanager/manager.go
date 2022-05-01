@@ -126,11 +126,11 @@ func (m *RateManager) ManageIP(ip string) bool {
 	if !ok {
 		ipBucket := ratelimit.NewBucket(time.Second, int64(m.cfg.Data.Buckets.IPCapacity))
 		ipBucketData = BucketData{
-			Bucket:     ipBucket,
-			LastActive: time.Now(),
+			Bucket: ipBucket,
 		}
 		m.ipBuckets[ip] = ipBucketData
 	}
+	ipBucketData.LastActive = time.Now()
 	ipTockensUsed := ipBucketData.Bucket.TakeAvailable(1)
 	return ipTockensUsed != 0
 }
@@ -142,11 +142,11 @@ func (m *RateManager) ManageLogin(login string) bool {
 	if !ok {
 		loginBucket := ratelimit.NewBucket(time.Second, int64(m.cfg.Data.Buckets.LoginCapacity))
 		loginBucketData = BucketData{
-			Bucket:     loginBucket,
-			LastActive: time.Now(),
+			Bucket: loginBucket,
 		}
 		m.loginBuckets[login] = loginBucketData
 	}
+	loginBucketData.LastActive = time.Now()
 	loginTockensUsed := loginBucketData.Bucket.TakeAvailable(1)
 	return loginTockensUsed != 0
 }
@@ -158,11 +158,11 @@ func (m *RateManager) ManagePassword(pass string) bool {
 	if !ok {
 		passwordBucket := ratelimit.NewBucket(time.Second, int64(m.cfg.Data.Buckets.PasswordCapacity))
 		passwordBucketData = BucketData{
-			Bucket:     passwordBucket,
-			LastActive: time.Now(),
+			Bucket: passwordBucket,
 		}
 		m.passwordBuckets[pass] = passwordBucketData
 	}
+	passwordBucketData.LastActive = time.Now()
 	passwordTockensUsed := passwordBucketData.Bucket.TakeAvailable(1)
 	return passwordTockensUsed != 0
 }

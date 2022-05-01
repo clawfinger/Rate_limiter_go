@@ -38,11 +38,16 @@ func (s *GrpcServer) Stop() {
 	s.server.Stop()
 }
 
+//nolint
 func (s *GrpcServer) Validate(ctx context.Context, attempt *pb.LoginAttempt) (*pb.AttemptResult, error) {
 	answer := &pb.AttemptResult{}
 
 	ipResult := s.context.Storage.CheckIP(ctx, attempt.IP)
 
+	if ipResult.Err != nil {
+		answer.Result = pb.AttemptResult_DENIED
+		return answer, nil
+	}
 	if ipResult.Status == storage.Whitelisted {
 		answer.Result = pb.AttemptResult_OK
 		return answer, nil
@@ -79,7 +84,11 @@ func (s *GrpcServer) AddBlacklist(ctx context.Context, ip *pb.Subnet) (*pb.Opera
 	res.Status = pb.OperationResult_OK
 	res.Reason = "AddBlacklist ok"
 
-	s.context.Storage.SetIP(ctx, ip.IPWithMask, storage.Blacklisted)
+	err := s.context.Storage.SetIP(ctx, ip.IPWithMask, storage.Blacklisted)
+	if err != nil {
+		res.Status = pb.OperationResult_FAIL
+		res.Reason = err.Error()
+	}
 
 	return res, nil
 }
@@ -87,7 +96,11 @@ func (s *GrpcServer) AddBlacklist(ctx context.Context, ip *pb.Subnet) (*pb.Opera
 func (s *GrpcServer) RemoveBlacklist(ctx context.Context, subnet *pb.Subnet) (*pb.OperationResult, error) {
 	res := &pb.OperationResult{}
 	res.Status = pb.OperationResult_OK
-	s.context.Storage.RemoveIP(ctx, subnet.IPWithMask, storage.Blacklisted)
+	err := s.context.Storage.RemoveIP(ctx, subnet.IPWithMask, storage.Blacklisted)
+	if err != nil {
+		res.Status = pb.OperationResult_FAIL
+		res.Reason = err.Error()
+	}
 	return res, nil
 }
 
@@ -95,8 +108,11 @@ func (s *GrpcServer) AddWhitelist(ctx context.Context, subnet *pb.Subnet) (*pb.O
 	res := &pb.OperationResult{}
 	res.Status = pb.OperationResult_OK
 	res.Reason = "AddWhitelist ok"
-	s.context.Storage.SetIP(ctx, subnet.IPWithMask, storage.Blacklisted)
-
+	err := s.context.Storage.SetIP(ctx, subnet.IPWithMask, storage.Blacklisted)
+	if err != nil {
+		res.Status = pb.OperationResult_FAIL
+		res.Reason = err.Error()
+	}
 	return res, nil
 }
 
@@ -104,6 +120,10 @@ func (s *GrpcServer) RemoveWhitelist(ctx context.Context, subnet *pb.Subnet) (*p
 	res := &pb.OperationResult{}
 	res.Status = pb.OperationResult_OK
 	res.Reason = "RemoveWhitelist ok"
-	s.context.Storage.RemoveIP(ctx, subnet.IPWithMask, storage.Blacklisted)
+	err := s.context.Storage.RemoveIP(ctx, subnet.IPWithMask, storage.Blacklisted)
+	if err != nil {
+		res.Status = pb.OperationResult_FAIL
+		res.Reason = err.Error()
+	}
 	return res, nil
 }
