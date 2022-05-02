@@ -5,7 +5,10 @@ option go_package = "./;pb";
 
 service Limiter {
     rpc Validate(LoginAttempt) returns (AttemptResult);
-    rpc DropStats(Stats) returns (OperationResult);
+    rpc DropIPStats(Stats) returns (OperationResult);
+    rpc DropLoginStats(Stats) returns (OperationResult);
+    rpc DropPasswordStats(Stats) returns (OperationResult);
+
     rpc AddBlacklist(Subnet) returns (OperationResult);
     rpc RemoveBlacklist(Subnet) returns (OperationResult);
     rpc AddWhitelist(Subnet) returns (OperationResult);
@@ -36,8 +39,7 @@ message OperationResult {
 }
 
 message Stats {
-    string Login = 1;
-    string IP = 2;
+    string Data = 1;
 }
 
 message Subnet {

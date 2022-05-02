@@ -88,7 +88,7 @@ func TestAcceptAfterDeny(t *testing.T) {
 	require.Truef(t, res.Ok, res.Reason)
 }
 
-func TestDropStats(t *testing.T) {
+func TestDropLoginStats(t *testing.T) {
 	config := config.NewConfig()
 	config.Data.Buckets.IPCapacity = 1000
 	config.Data.Buckets.LoginCapacity = 10
@@ -103,7 +103,49 @@ func TestDropStats(t *testing.T) {
 	}
 	res := manager.Manage(ip, login, pass)
 	require.Falsef(t, res.Ok, res.Reason)
-	manager.DropStats(login, ip)
+	manager.DropLiginStats(login)
+
+	res = manager.Manage(ip, login, pass)
+	require.Truef(t, res.Ok, res.Reason)
+}
+
+func TestDropIPStats(t *testing.T) {
+	config := config.NewConfig()
+	config.Data.Buckets.IPCapacity = 10
+	config.Data.Buckets.LoginCapacity = 100
+	config.Data.Buckets.PasswordCapacity = 50
+
+	loggerMock := &LoggerMock{}
+
+	manager := manager.New(config, loggerMock)
+	for i := 0; i < 10; i++ {
+		res := manager.Manage(ip, login, pass)
+		require.Truef(t, res.Ok, res.Reason)
+	}
+	res := manager.Manage(ip, login, pass)
+	require.Falsef(t, res.Ok, res.Reason)
+	manager.DropIPStats(ip)
+
+	res = manager.Manage(ip, login, pass)
+	require.Truef(t, res.Ok, res.Reason)
+}
+
+func TestDropPasswordStats(t *testing.T) {
+	config := config.NewConfig()
+	config.Data.Buckets.IPCapacity = 1000
+	config.Data.Buckets.LoginCapacity = 100
+	config.Data.Buckets.PasswordCapacity = 10
+
+	loggerMock := &LoggerMock{}
+
+	manager := manager.New(config, loggerMock)
+	for i := 0; i < 10; i++ {
+		res := manager.Manage(ip, login, pass)
+		require.Truef(t, res.Ok, res.Reason)
+	}
+	res := manager.Manage(ip, login, pass)
+	require.Falsef(t, res.Ok, res.Reason)
+	manager.DropPasswordStats(pass)
 
 	res = manager.Manage(ip, login, pass)
 	require.Truef(t, res.Ok, res.Reason)

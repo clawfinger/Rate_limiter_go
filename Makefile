@@ -10,6 +10,8 @@ generate:
 
 build:
 	go build -v -o ./bin ./cmd/limiter
+	go build -v -o ./bin ./cmd/cli
+
 
 db:
 	docker start redis || docker run -p 6379:6379 -d redis

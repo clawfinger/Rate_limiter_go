@@ -17,7 +17,9 @@ type BucketData struct {
 
 type AbstractRateManager interface {
 	Manage(ip string, login string, password string) *Result
-	DropStats(login string, ip string)
+	DropIPStats(ip string)
+	DropLiginStats(login string)
+	DropPasswordStats(password string)
 }
 
 type RateManager struct {
@@ -101,6 +103,8 @@ type Result struct {
 }
 
 func (m *RateManager) Manage(ip string, login string, password string) *Result {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
 	ipOk := m.ManageIP(ip)
 	if !ipOk {
 		return &Result{Ok: false, Reason: "IP denied"}
@@ -120,8 +124,6 @@ func (m *RateManager) Manage(ip string, login string, password string) *Result {
 }
 
 func (m *RateManager) ManageIP(ip string) bool {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
 	ipBucketData, ok := m.ipBuckets[ip]
 	if !ok {
 		ipBucket := ratelimit.NewBucket(time.Second, int64(m.cfg.Data.Buckets.IPCapacity))
@@ -136,8 +138,6 @@ func (m *RateManager) ManageIP(ip string) bool {
 }
 
 func (m *RateManager) ManageLogin(login string) bool {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
 	loginBucketData, ok := m.loginBuckets[login]
 	if !ok {
 		loginBucket := ratelimit.NewBucket(time.Second, int64(m.cfg.Data.Buckets.LoginCapacity))
@@ -152,8 +152,6 @@ func (m *RateManager) ManageLogin(login string) bool {
 }
 
 func (m *RateManager) ManagePassword(pass string) bool {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
 	passwordBucketData, ok := m.passwordBuckets[pass]
 	if !ok {
 		passwordBucket := ratelimit.NewBucket(time.Second, int64(m.cfg.Data.Buckets.PasswordCapacity))
@@ -167,7 +165,18 @@ func (m *RateManager) ManagePassword(pass string) bool {
 	return passwordTockensUsed != 0
 }
 
-func (m *RateManager) DropStats(login string, ip string) {
+func (m *RateManager) DropIPStats(ip string) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+	ipBucket := ratelimit.NewBucket(time.Second, int64(m.cfg.Data.Buckets.IPCapacity))
+	ipBucketData := BucketData{
+		Bucket:     ipBucket,
+		LastActive: time.Now(),
+	}
+	m.ipBuckets[ip] = ipBucketData
+}
+
+func (m *RateManager) DropLiginStats(login string) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	loginBucket := ratelimit.NewBucket(time.Second, int64(m.cfg.Data.Buckets.LoginCapacity))
@@ -176,11 +185,15 @@ func (m *RateManager) DropStats(login string, ip string) {
 		LastActive: time.Now(),
 	}
 	m.loginBuckets[login] = loginBucketData
+}
 
-	ipBucket := ratelimit.NewBucket(time.Second, int64(m.cfg.Data.Buckets.IPCapacity))
-	ipBucketData := BucketData{
-		Bucket:     ipBucket,
+func (m *RateManager) DropPasswordStats(password string) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+	passwordBucket := ratelimit.NewBucket(time.Second, int64(m.cfg.Data.Buckets.PasswordCapacity))
+	passwordBucketData := BucketData{
+		Bucket:     passwordBucket,
 		LastActive: time.Now(),
 	}
-	m.ipBuckets[ip] = ipBucketData
+	m.passwordBuckets[password] = passwordBucketData
 }

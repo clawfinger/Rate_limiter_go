@@ -2,7 +2,6 @@ package grpcserver
 
 import (
 	"context"
-	"log"
 	"net"
 
 	pb "github.com/clawfinger/ratelimiter/api/generated"
@@ -26,7 +25,7 @@ func NewGrpcServer(context *servers.ServerCommonContext) *GrpcServer {
 func (s *GrpcServer) Start() error {
 	lsn, err := net.Listen("tcp", s.context.Cfg.Data.Grpc.Addr)
 	if err != nil {
-		log.Fatal(err)
+		s.context.Logger.Error("Failed to start grpc server", err.Error())
 	}
 
 	s.server = grpc.NewServer(grpc.ChainUnaryInterceptor(LoggerInterceptor(s.context.Logger)))
@@ -69,13 +68,33 @@ func (s *GrpcServer) Validate(ctx context.Context, attempt *pb.LoginAttempt) (*p
 	return answer, nil
 }
 
-func (s *GrpcServer) DropStats(ctx context.Context, stats *pb.Stats) (*pb.OperationResult, error) {
+func (s *GrpcServer) DropIPStats(ctx context.Context, stats *pb.Stats) (*pb.OperationResult, error) {
 	res := &pb.OperationResult{}
 
-	s.context.RateManager.DropStats(stats.Login, stats.IP)
+	s.context.RateManager.DropIPStats(stats.Data)
 
 	res.Status = pb.OperationResult_OK
-	res.Reason = "DropStats ok"
+	res.Reason = "Drop ip stats ok"
+	return res, nil
+}
+
+func (s *GrpcServer) DropLoginStats(ctx context.Context, stats *pb.Stats) (*pb.OperationResult, error) {
+	res := &pb.OperationResult{}
+
+	s.context.RateManager.DropLiginStats(stats.Data)
+
+	res.Status = pb.OperationResult_OK
+	res.Reason = "Drop login stats ok"
+	return res, nil
+}
+
+func (s *GrpcServer) DropPasswordStats(ctx context.Context, stats *pb.Stats) (*pb.OperationResult, error) {
+	res := &pb.OperationResult{}
+
+	s.context.RateManager.DropPasswordStats(stats.Data)
+
+	res.Status = pb.OperationResult_OK
+	res.Reason = "Drop password stats ok"
 	return res, nil
 }
 

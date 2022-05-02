@@ -19,7 +19,9 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type LimiterClient interface {
 	Validate(ctx context.Context, in *LoginAttempt, opts ...grpc.CallOption) (*AttemptResult, error)
-	DropStats(ctx context.Context, in *Stats, opts ...grpc.CallOption) (*OperationResult, error)
+	DropIPStats(ctx context.Context, in *Stats, opts ...grpc.CallOption) (*OperationResult, error)
+	DropLoginStats(ctx context.Context, in *Stats, opts ...grpc.CallOption) (*OperationResult, error)
+	DropPasswordStats(ctx context.Context, in *Stats, opts ...grpc.CallOption) (*OperationResult, error)
 	AddBlacklist(ctx context.Context, in *Subnet, opts ...grpc.CallOption) (*OperationResult, error)
 	RemoveBlacklist(ctx context.Context, in *Subnet, opts ...grpc.CallOption) (*OperationResult, error)
 	AddWhitelist(ctx context.Context, in *Subnet, opts ...grpc.CallOption) (*OperationResult, error)
@@ -43,9 +45,27 @@ func (c *limiterClient) Validate(ctx context.Context, in *LoginAttempt, opts ...
 	return out, nil
 }
 
-func (c *limiterClient) DropStats(ctx context.Context, in *Stats, opts ...grpc.CallOption) (*OperationResult, error) {
+func (c *limiterClient) DropIPStats(ctx context.Context, in *Stats, opts ...grpc.CallOption) (*OperationResult, error) {
 	out := new(OperationResult)
-	err := c.cc.Invoke(ctx, "/ratelimiter.Limiter/DropStats", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/ratelimiter.Limiter/DropIPStats", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *limiterClient) DropLoginStats(ctx context.Context, in *Stats, opts ...grpc.CallOption) (*OperationResult, error) {
+	out := new(OperationResult)
+	err := c.cc.Invoke(ctx, "/ratelimiter.Limiter/DropLoginStats", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *limiterClient) DropPasswordStats(ctx context.Context, in *Stats, opts ...grpc.CallOption) (*OperationResult, error) {
+	out := new(OperationResult)
+	err := c.cc.Invoke(ctx, "/ratelimiter.Limiter/DropPasswordStats", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +113,9 @@ func (c *limiterClient) RemoveWhitelist(ctx context.Context, in *Subnet, opts ..
 // for forward compatibility
 type LimiterServer interface {
 	Validate(context.Context, *LoginAttempt) (*AttemptResult, error)
-	DropStats(context.Context, *Stats) (*OperationResult, error)
+	DropIPStats(context.Context, *Stats) (*OperationResult, error)
+	DropLoginStats(context.Context, *Stats) (*OperationResult, error)
+	DropPasswordStats(context.Context, *Stats) (*OperationResult, error)
 	AddBlacklist(context.Context, *Subnet) (*OperationResult, error)
 	RemoveBlacklist(context.Context, *Subnet) (*OperationResult, error)
 	AddWhitelist(context.Context, *Subnet) (*OperationResult, error)
@@ -108,8 +130,14 @@ type UnimplementedLimiterServer struct {
 func (UnimplementedLimiterServer) Validate(context.Context, *LoginAttempt) (*AttemptResult, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Validate not implemented")
 }
-func (UnimplementedLimiterServer) DropStats(context.Context, *Stats) (*OperationResult, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DropStats not implemented")
+func (UnimplementedLimiterServer) DropIPStats(context.Context, *Stats) (*OperationResult, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DropIPStats not implemented")
+}
+func (UnimplementedLimiterServer) DropLoginStats(context.Context, *Stats) (*OperationResult, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DropLoginStats not implemented")
+}
+func (UnimplementedLimiterServer) DropPasswordStats(context.Context, *Stats) (*OperationResult, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DropPasswordStats not implemented")
 }
 func (UnimplementedLimiterServer) AddBlacklist(context.Context, *Subnet) (*OperationResult, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddBlacklist not implemented")
@@ -154,20 +182,56 @@ func _Limiter_Validate_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Limiter_DropStats_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Limiter_DropIPStats_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Stats)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(LimiterServer).DropStats(ctx, in)
+		return srv.(LimiterServer).DropIPStats(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ratelimiter.Limiter/DropStats",
+		FullMethod: "/ratelimiter.Limiter/DropIPStats",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(LimiterServer).DropStats(ctx, req.(*Stats))
+		return srv.(LimiterServer).DropIPStats(ctx, req.(*Stats))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Limiter_DropLoginStats_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Stats)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LimiterServer).DropLoginStats(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ratelimiter.Limiter/DropLoginStats",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LimiterServer).DropLoginStats(ctx, req.(*Stats))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Limiter_DropPasswordStats_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Stats)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LimiterServer).DropPasswordStats(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ratelimiter.Limiter/DropPasswordStats",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LimiterServer).DropPasswordStats(ctx, req.(*Stats))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -256,8 +320,16 @@ var Limiter_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Limiter_Validate_Handler,
 		},
 		{
-			MethodName: "DropStats",
-			Handler:    _Limiter_DropStats_Handler,
+			MethodName: "DropIPStats",
+			Handler:    _Limiter_DropIPStats_Handler,
+		},
+		{
+			MethodName: "DropLoginStats",
+			Handler:    _Limiter_DropLoginStats_Handler,
+		},
+		{
+			MethodName: "DropPasswordStats",
+			Handler:    _Limiter_DropPasswordStats_Handler,
 		},
 		{
 			MethodName: "AddBlacklist",
