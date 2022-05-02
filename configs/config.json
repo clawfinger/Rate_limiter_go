@@ -6,7 +6,7 @@
     "passwordcapacity": "100"
   },
   "grpc": {
-    "addr": "127.0.0.1:50051"
+    "addr": "0.0.0.0:50051"
   },
   "logger": {
     "filename": "limiter.log",
