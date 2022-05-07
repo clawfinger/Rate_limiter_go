@@ -28,5 +28,16 @@ lint: install-lint-deps
 run:
 	./bin/limiter -c ./configs/config.json
 
+create_build_container:
+	docker build -f ./ci/Dockerfile_build -t build_image .
+
+build_in_docker:
+	docker run -v `pwd`:/service build_image
+
+create_run_container:
+	docker build -f ./deploy/Dockerfile . -t limiter
+
+run_docker:
+	docker run -dp 50051:50051 limiter
 
 .PHONY: generate build db test install-lint-deps lint run
