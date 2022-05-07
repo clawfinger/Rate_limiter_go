@@ -5,8 +5,8 @@ import (
 	"net"
 
 	pb "github.com/clawfinger/ratelimiter/api/generated"
-	"github.com/clawfinger/ratelimiter/internalapi"
-	servers "github.com/clawfinger/ratelimiter/server"
+	"github.com/clawfinger/ratelimiter/internal/internalapi"
+	servers "github.com/clawfinger/ratelimiter/internal/server"
 	"google.golang.org/grpc"
 )
 

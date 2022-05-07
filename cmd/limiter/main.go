@@ -10,12 +10,12 @@ import (
 	"syscall"
 
 	"github.com/clawfinger/ratelimiter/config"
-	"github.com/clawfinger/ratelimiter/logger"
-	manager "github.com/clawfinger/ratelimiter/ratemanager"
-	storage "github.com/clawfinger/ratelimiter/redis"
+	"github.com/clawfinger/ratelimiter/internal/logger"
+	manager "github.com/clawfinger/ratelimiter/internal/ratemanager"
+	storage "github.com/clawfinger/ratelimiter/internal/redis"
+	serverctx "github.com/clawfinger/ratelimiter/internal/server"
+	grpcserver "github.com/clawfinger/ratelimiter/internal/server/grpc"
 	ratelimiter "github.com/clawfinger/ratelimiter/root"
-	serverctx "github.com/clawfinger/ratelimiter/server"
-	grpcserver "github.com/clawfinger/ratelimiter/server/grpc"
 	"github.com/spf13/cobra"
 )
 

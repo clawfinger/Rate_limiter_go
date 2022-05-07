@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/clawfinger/ratelimiter/config"
-	"github.com/clawfinger/ratelimiter/logger"
-	grpcserver "github.com/clawfinger/ratelimiter/server/grpc"
+	"github.com/clawfinger/ratelimiter/internal/logger"
+	grpcserver "github.com/clawfinger/ratelimiter/internal/server/grpc"
 )
 
 type LimiterService struct {

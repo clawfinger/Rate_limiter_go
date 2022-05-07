@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/clawfinger/ratelimiter/logger"
+	"github.com/clawfinger/ratelimiter/internal/logger"
 	"google.golang.org/grpc"
 )
 

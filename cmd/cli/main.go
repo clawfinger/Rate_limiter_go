@@ -12,7 +12,7 @@ import (
 	"syscall"
 
 	pb "github.com/clawfinger/ratelimiter/api/generated"
-	"github.com/clawfinger/ratelimiter/cli"
+	"github.com/clawfinger/ratelimiter/internal/cli"
 )
 
 const (

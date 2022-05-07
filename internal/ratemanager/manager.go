@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/clawfinger/ratelimiter/config"
-	api "github.com/clawfinger/ratelimiter/internalapi"
-	"github.com/clawfinger/ratelimiter/logger"
+	api "github.com/clawfinger/ratelimiter/internal/internalapi"
+	"github.com/clawfinger/ratelimiter/internal/logger"
 	"github.com/juju/ratelimit"
 )
 

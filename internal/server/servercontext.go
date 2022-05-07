@@ -2,8 +2,8 @@ package serverctx
 
 import (
 	"github.com/clawfinger/ratelimiter/config"
-	internalapi "github.com/clawfinger/ratelimiter/internalapi"
-	"github.com/clawfinger/ratelimiter/logger"
+	internalapi "github.com/clawfinger/ratelimiter/internal/internalapi"
+	"github.com/clawfinger/ratelimiter/internal/logger"
 )
 
 type ServerCommonContext struct {
