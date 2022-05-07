@@ -5,7 +5,7 @@ import (
 	"net"
 
 	pb "github.com/clawfinger/ratelimiter/api/generated"
-	storage "github.com/clawfinger/ratelimiter/redis"
+	"github.com/clawfinger/ratelimiter/internalapi"
 	servers "github.com/clawfinger/ratelimiter/server"
 	"google.golang.org/grpc"
 )
@@ -47,11 +47,11 @@ func (s *GrpcServer) Validate(ctx context.Context, attempt *pb.LoginAttempt) (*p
 		answer.Result = pb.AttemptResult_DENIED
 		return answer, nil
 	}
-	if ipResult.Status == storage.Whitelisted {
+	if ipResult.Status == internalapi.Whitelisted {
 		answer.Result = pb.AttemptResult_OK
 		return answer, nil
 	}
-	if ipResult.Status == storage.Blacklisted {
+	if ipResult.Status == internalapi.Blacklisted {
 		answer.Result = pb.AttemptResult_DENIED
 		return answer, nil
 	}
@@ -103,7 +103,7 @@ func (s *GrpcServer) AddBlacklist(ctx context.Context, ip *pb.Subnet) (*pb.Opera
 	res.Status = pb.OperationResult_OK
 	res.Reason = "AddBlacklist ok"
 
-	err := s.context.Storage.SetIP(ctx, ip.IPWithMask, storage.Blacklisted)
+	err := s.context.Storage.SetIP(ctx, ip.IPWithMask, internalapi.Blacklisted)
 	if err != nil {
 		res.Status = pb.OperationResult_FAIL
 		res.Reason = err.Error()
@@ -115,7 +115,7 @@ func (s *GrpcServer) AddBlacklist(ctx context.Context, ip *pb.Subnet) (*pb.Opera
 func (s *GrpcServer) RemoveBlacklist(ctx context.Context, subnet *pb.Subnet) (*pb.OperationResult, error) {
 	res := &pb.OperationResult{}
 	res.Status = pb.OperationResult_OK
-	err := s.context.Storage.RemoveIP(ctx, subnet.IPWithMask, storage.Blacklisted)
+	err := s.context.Storage.RemoveIP(ctx, subnet.IPWithMask, internalapi.Blacklisted)
 	if err != nil {
 		res.Status = pb.OperationResult_FAIL
 		res.Reason = err.Error()
@@ -127,7 +127,7 @@ func (s *GrpcServer) AddWhitelist(ctx context.Context, subnet *pb.Subnet) (*pb.O
 	res := &pb.OperationResult{}
 	res.Status = pb.OperationResult_OK
 	res.Reason = "AddWhitelist ok"
-	err := s.context.Storage.SetIP(ctx, subnet.IPWithMask, storage.Blacklisted)
+	err := s.context.Storage.SetIP(ctx, subnet.IPWithMask, internalapi.Blacklisted)
 	if err != nil {
 		res.Status = pb.OperationResult_FAIL
 		res.Reason = err.Error()
@@ -139,7 +139,7 @@ func (s *GrpcServer) RemoveWhitelist(ctx context.Context, subnet *pb.Subnet) (*p
 	res := &pb.OperationResult{}
 	res.Status = pb.OperationResult_OK
 	res.Reason = "RemoveWhitelist ok"
-	err := s.context.Storage.RemoveIP(ctx, subnet.IPWithMask, storage.Blacklisted)
+	err := s.context.Storage.RemoveIP(ctx, subnet.IPWithMask, internalapi.Blacklisted)
 	if err != nil {
 		res.Status = pb.OperationResult_FAIL
 		res.Reason = err.Error()

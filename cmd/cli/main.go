@@ -15,6 +15,17 @@ import (
 	"github.com/clawfinger/ratelimiter/cli"
 )
 
+const (
+	addBlacklist    = 1
+	removeBlacklist = 2
+	addWhitelist    = 3
+	removeWhitelist = 4
+	dropIP          = 5
+	dropLogin       = 6
+	dropPassword    = 7
+	exit            = 0
+)
+
 func printActions() {
 	fmt.Println("1 Add subnet to blacklist")
 	fmt.Println("2 Remove subnet from blacklist")
@@ -53,9 +64,7 @@ Label:
 			if !ipOK {
 				fmt.Println("address string is invalid")
 			} else {
-				client = &cli.CtlAgent{}
-				err := client.Connect(strings.TrimSuffix(text, "\n"))
-
+				client, err = cli.NewClient(strings.TrimSuffix(text, "\n"))
 				if err != nil {
 					fmt.Printf("Failed to connect to service. Reason: %s\n", err.Error())
 				} else {
@@ -78,21 +87,21 @@ Label:
 			fmt.Println("Wrong action")
 		}
 		switch selected {
-		case 1:
+		case addBlacklist:
 			handleAddBlacklist(ctx, client, reader)
-		case 2:
+		case removeBlacklist:
 			handleRemoveBlacklist(ctx, client, reader)
-		case 3:
+		case addWhitelist:
 			handleAddWhitelist(ctx, client, reader)
-		case 4:
+		case removeWhitelist:
 			handleRemoveWhitelist(ctx, client, reader)
-		case 5:
+		case dropIP:
 			handleIPDropStats(ctx, client, reader)
-		case 6:
+		case dropLogin:
 			handleLoginDropStats(ctx, client, reader)
-		case 7:
+		case dropPassword:
 			handlePasswordDropStats(ctx, client, reader)
-		case 0:
+		case exit:
 			return
 		default:
 			fmt.Println("Wrong action")

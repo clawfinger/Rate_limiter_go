@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/clawfinger/ratelimiter/config"
+	api "github.com/clawfinger/ratelimiter/internalapi"
 	"github.com/clawfinger/ratelimiter/logger"
 	"github.com/juju/ratelimit"
 )
@@ -13,13 +14,6 @@ import (
 type BucketData struct {
 	Bucket     *ratelimit.Bucket
 	LastActive time.Time
-}
-
-type AbstractRateManager interface {
-	Manage(ip string, login string, password string) *Result
-	DropIPStats(ip string)
-	DropLiginStats(login string)
-	DropPasswordStats(password string)
 }
 
 type RateManager struct {
@@ -97,27 +91,22 @@ func (m *RateManager) Cleanup() {
 	}
 }
 
-type Result struct {
-	Ok     bool
-	Reason string
-}
-
-func (m *RateManager) Manage(ip string, login string, password string) *Result {
+func (m *RateManager) Manage(ip string, login string, password string) *api.OperationResult {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	ipOk := m.ManageIP(ip)
 	if !ipOk {
-		return &Result{Ok: false, Reason: "IP denied"}
+		return &api.OperationResult{Ok: false, Reason: "IP denied"}
 	}
 	loginOk := m.ManageLogin(login)
 	if !loginOk {
-		return &Result{Ok: false, Reason: "Login denied"}
+		return &api.OperationResult{Ok: false, Reason: "Login denied"}
 	}
 	passOk := m.ManagePassword(password)
 	if !passOk {
-		return &Result{Ok: false, Reason: "Password denied"}
+		return &api.OperationResult{Ok: false, Reason: "Password denied"}
 	}
-	return &Result{
+	return &api.OperationResult{
 		Ok:     true,
 		Reason: "success",
 	}

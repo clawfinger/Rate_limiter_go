@@ -6,6 +6,7 @@ import (
 	"net"
 
 	"github.com/clawfinger/ratelimiter/config"
+	internalapi "github.com/clawfinger/ratelimiter/internalapi"
 	"github.com/clawfinger/ratelimiter/logger"
 	"github.com/go-redis/redis/v8"
 )
@@ -16,26 +17,6 @@ const (
 	whiteKey   = "whiteKey"
 	blackKey   = "blackKey"
 )
-
-type Restriction uint8
-
-const (
-	NotSet      Restriction = 0
-	Whitelisted Restriction = 1
-	Blacklisted Restriction = 2
-)
-
-type Result struct {
-	Status Restriction
-	Reason string
-	Err    error
-}
-
-type AbstractStorage interface {
-	CheckIP(ctx context.Context, ip string) *Result
-	SetIP(ctx context.Context, ip string, restriction Restriction) error
-	RemoveIP(ctx context.Context, ip string, restriction Restriction) error
-}
 
 type Storage struct {
 	client *redis.Client
@@ -62,21 +43,21 @@ func (s *Storage) Stop() {
 	s.client.Close()
 }
 
-func NewResult(status Restriction, reason string, err error) *Result {
-	return &Result{
+func NewResult(status internalapi.Restriction, reason string, err error) *internalapi.StorageResult {
+	return &internalapi.StorageResult{
 		Status: status,
 		Reason: reason,
 		Err:    err,
 	}
 }
 
-func (s *Storage) CheckBlacklist(ctx context.Context, ip net.IP) (bool, *Result) {
+func (s *Storage) CheckBlacklist(ctx context.Context, ip net.IP) (bool, *internalapi.StorageResult) {
 	ctx, cancFunc := context.WithTimeout(ctx, s.cfg.Data.RedisData.OpTimeout)
 	result := s.client.HGetAll(ctx, blackKey)
 	defer cancFunc()
 	if result.Err() != nil {
 		s.logger.Info("Error on gettting blacklist", result.Err().Error())
-		return false, NewResult(NotSet, "db error", result.Err())
+		return false, NewResult(internalapi.NotSet, "db error", result.Err())
 	}
 	for subnetString := range result.Val() {
 		_, subnet, err := net.ParseCIDR(subnetString)
@@ -85,19 +66,19 @@ func (s *Storage) CheckBlacklist(ctx context.Context, ip net.IP) (bool, *Result)
 			continue
 		}
 		if subnet.Contains(ip) {
-			return true, NewResult(Blacklisted, "Blacklisted", nil)
+			return true, NewResult(internalapi.Blacklisted, "Blacklisted", nil)
 		}
 	}
-	return false, NewResult(NotSet, "not in a blacklist", nil)
+	return false, NewResult(internalapi.NotSet, "not in a blacklist", nil)
 }
 
-func (s *Storage) CheckWhitelistt(ctx context.Context, ip net.IP) (bool, *Result) {
+func (s *Storage) CheckWhitelistt(ctx context.Context, ip net.IP) (bool, *internalapi.StorageResult) {
 	ctx, cancFunc := context.WithTimeout(ctx, s.cfg.Data.RedisData.OpTimeout)
 	result := s.client.HGetAll(ctx, whiteKey)
 	defer cancFunc()
 	if result.Err() != nil {
 		s.logger.Info("Error on gettting whitelist", result.Err().Error())
-		return false, NewResult(NotSet, "db error", result.Err())
+		return false, NewResult(internalapi.NotSet, "db error", result.Err())
 	}
 	for subnetString := range result.Val() {
 		_, subnet, err := net.ParseCIDR(subnetString)
@@ -106,18 +87,18 @@ func (s *Storage) CheckWhitelistt(ctx context.Context, ip net.IP) (bool, *Result
 			continue
 		}
 		if subnet.Contains(ip) {
-			return true, NewResult(Whitelisted, "Whitelisted", nil)
+			return true, NewResult(internalapi.Whitelisted, "Whitelisted", nil)
 		}
 	}
 
-	return false, NewResult(NotSet, "not set in lists", nil)
+	return false, NewResult(internalapi.NotSet, "not set in lists", nil)
 }
 
-func (s *Storage) CheckIP(ctx context.Context, ipString string) *Result {
+func (s *Storage) CheckIP(ctx context.Context, ipString string) *internalapi.StorageResult {
 	ip := net.ParseIP(ipString)
 	if ip == nil {
 		s.logger.Info("Error parsing ip subnet string from db", ipString)
-		return NewResult(NotSet, "error parsing ip", errors.New("error parsing ip"))
+		return NewResult(internalapi.NotSet, "error parsing ip", errors.New("error parsing ip"))
 	}
 
 	filtered, result := s.CheckBlacklist(ctx, ip)
@@ -129,14 +110,14 @@ func (s *Storage) CheckIP(ctx context.Context, ipString string) *Result {
 	if result.Err != nil || filtered {
 		return result
 	}
-	return NewResult(NotSet, "not set in lists", nil)
+	return NewResult(internalapi.NotSet, "not set in lists", nil)
 }
 
-func (s *Storage) SetIP(ctx context.Context, ip string, restriction Restriction) error {
+func (s *Storage) SetIP(ctx context.Context, ip string, restriction internalapi.Restriction) error {
 	ctx, cancFunc := context.WithTimeout(ctx, s.cfg.Data.RedisData.OpTimeout)
 	defer cancFunc()
 	switch restriction {
-	case Whitelisted:
+	case internalapi.Whitelisted:
 		result := s.client.HSet(ctx, whiteKey, ip, whiteLabel)
 		if result.Err() != nil {
 			s.logger.Info("Error on adding ip to whitelist", result.Err().Error())
@@ -144,38 +125,38 @@ func (s *Storage) SetIP(ctx context.Context, ip string, restriction Restriction)
 		}
 		s.logger.Info("Added", result.Val(), "entries to whitelists")
 
-	case Blacklisted:
+	case internalapi.Blacklisted:
 		result := s.client.HSet(ctx, blackKey, ip, blackLabel)
 		if result.Err() != nil {
 			s.logger.Info("Error on adding ip to blacklist", result.Err().Error())
 			return result.Err()
 		}
 		s.logger.Info("Added", result.Val(), "entries to blacklist")
-	case NotSet:
+	case internalapi.NotSet:
 		return nil
 	}
 	return nil
 }
 
-func (s *Storage) RemoveIP(ctx context.Context, ip string, restriction Restriction) error {
+func (s *Storage) RemoveIP(ctx context.Context, ip string, restriction internalapi.Restriction) error {
 	ctx, cancFunc := context.WithTimeout(ctx, s.cfg.Data.RedisData.OpTimeout)
 	defer cancFunc()
 	switch restriction {
-	case Whitelisted:
+	case internalapi.Whitelisted:
 		result := s.client.HDel(ctx, whiteKey, ip)
 		if result.Err() != nil {
 			s.logger.Info("Error on removing ip from whitelist", result.Err().Error())
 			return result.Err()
 		}
 		s.logger.Info("Deleted", result.Val(), "entries from whitelists")
-	case Blacklisted:
+	case internalapi.Blacklisted:
 		result := s.client.HDel(ctx, blackKey, ip)
 		if result.Err() != nil {
 			s.logger.Info("Error on removing ip from blacklist", result.Err().Error())
 			return result.Err()
 		}
 		s.logger.Info("Deleted", result.Val(), "entries from blacklist")
-	case NotSet:
+	case internalapi.NotSet:
 		return nil
 	}
 	return nil

@@ -14,6 +14,12 @@ type CtlAgent struct {
 	conn   *grpc.ClientConn
 }
 
+func NewClient(addr string) (*CtlAgent, error) {
+	agent := &CtlAgent{}
+	err := agent.Connect(addr)
+	return agent, err
+}
+
 func (c *CtlAgent) Connect(addr string) error {
 	var err error
 	c.conn, err = grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
