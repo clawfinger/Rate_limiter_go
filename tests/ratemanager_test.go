@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/clawfinger/ratelimiter/config"
-	manager "github.com/clawfinger/ratelimiter/ratemanager"
+	manager "github.com/clawfinger/ratelimiter/internal/ratemanager"
 	"github.com/stretchr/testify/require"
 )
 
