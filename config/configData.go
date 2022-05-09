@@ -49,7 +49,7 @@ type RedisData struct {
 
 func (d *RedisData) SetDefault(v *viper.Viper) {
 	v.SetDefault("RedisData", map[string]interface{}{
-		"Addr":      "localhost:6379",
+		"Addr":      "redis:6379",
 		"OpTimeout": "500ms",
 	})
 }
@@ -60,7 +60,7 @@ type Grpc struct {
 
 func (d *Grpc) SetDefault(v *viper.Viper) {
 	v.SetDefault("Grpc", map[string]interface{}{
-		"Addr": "127.0.0.1:50051",
+		"Addr": ":50051",
 	})
 }
 

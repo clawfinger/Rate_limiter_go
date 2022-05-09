@@ -38,21 +38,21 @@ func (s *GrpcServer) Stop() {
 }
 
 //nolint
-func (s *GrpcServer) Validate(ctx context.Context, attempt *pb.LoginAttempt) (*pb.AttemptResult, error) {
-	answer := &pb.AttemptResult{}
+func (s *GrpcServer) Validate(ctx context.Context, attempt *pb.LoginAttempt) (*pb.LoginResult, error) {
+	answer := &pb.LoginResult{}
 
 	ipResult := s.context.Storage.CheckIP(ctx, attempt.IP)
 
 	if ipResult.Err != nil {
-		answer.Result = pb.AttemptResult_DENIED
+		answer.Result = pb.LoginResult_DENIED
 		return answer, nil
 	}
 	if ipResult.Status == internalapi.Whitelisted {
-		answer.Result = pb.AttemptResult_OK
+		answer.Result = pb.LoginResult_OK
 		return answer, nil
 	}
 	if ipResult.Status == internalapi.Blacklisted {
-		answer.Result = pb.AttemptResult_DENIED
+		answer.Result = pb.LoginResult_DENIED
 		return answer, nil
 	}
 
@@ -61,87 +61,87 @@ func (s *GrpcServer) Validate(ctx context.Context, attempt *pb.LoginAttempt) (*p
 	s.context.Logger.Info("Validation result for request", "ip", attempt.IP, "login", attempt.Login,
 		"password", attempt.Password, "status", result.Ok, "reason", result.Reason)
 	if result.Ok {
-		answer.Result = pb.AttemptResult_OK
+		answer.Result = pb.LoginResult_OK
 	} else {
-		answer.Result = pb.AttemptResult_DENIED
+		answer.Result = pb.LoginResult_DENIED
 	}
 	return answer, nil
 }
 
-func (s *GrpcServer) DropIPStats(ctx context.Context, stats *pb.Stats) (*pb.OperationResult, error) {
-	res := &pb.OperationResult{}
+func (s *GrpcServer) DropIPStats(ctx context.Context, stats *pb.Stats) (*pb.StatsResult, error) {
+	res := &pb.StatsResult{}
 
 	s.context.RateManager.DropIPStats(stats.Data)
 
-	res.Status = pb.OperationResult_OK
+	res.Status = pb.ResultStatus_OK
 	res.Reason = "Drop ip stats ok"
 	return res, nil
 }
 
-func (s *GrpcServer) DropLoginStats(ctx context.Context, stats *pb.Stats) (*pb.OperationResult, error) {
-	res := &pb.OperationResult{}
+func (s *GrpcServer) DropLoginStats(ctx context.Context, stats *pb.Stats) (*pb.StatsResult, error) {
+	res := &pb.StatsResult{}
 
 	s.context.RateManager.DropLiginStats(stats.Data)
 
-	res.Status = pb.OperationResult_OK
+	res.Status = pb.ResultStatus_OK
 	res.Reason = "Drop login stats ok"
 	return res, nil
 }
 
-func (s *GrpcServer) DropPasswordStats(ctx context.Context, stats *pb.Stats) (*pb.OperationResult, error) {
-	res := &pb.OperationResult{}
+func (s *GrpcServer) DropPasswordStats(ctx context.Context, stats *pb.Stats) (*pb.StatsResult, error) {
+	res := &pb.StatsResult{}
 
 	s.context.RateManager.DropPasswordStats(stats.Data)
 
-	res.Status = pb.OperationResult_OK
+	res.Status = pb.ResultStatus_OK
 	res.Reason = "Drop password stats ok"
 	return res, nil
 }
 
-func (s *GrpcServer) AddBlacklist(ctx context.Context, ip *pb.Subnet) (*pb.OperationResult, error) {
-	res := &pb.OperationResult{}
-	res.Status = pb.OperationResult_OK
+func (s *GrpcServer) AddBlacklist(ctx context.Context, ip *pb.Subnet) (*pb.SubnetResult, error) {
+	res := &pb.SubnetResult{}
+	res.Status = pb.ResultStatus_OK
 	res.Reason = "AddBlacklist ok"
 
 	err := s.context.Storage.SetIP(ctx, ip.IPWithMask, internalapi.Blacklisted)
 	if err != nil {
-		res.Status = pb.OperationResult_FAIL
+		res.Status = pb.ResultStatus_FAIL
 		res.Reason = err.Error()
 	}
 
 	return res, nil
 }
 
-func (s *GrpcServer) RemoveBlacklist(ctx context.Context, subnet *pb.Subnet) (*pb.OperationResult, error) {
-	res := &pb.OperationResult{}
-	res.Status = pb.OperationResult_OK
+func (s *GrpcServer) RemoveBlacklist(ctx context.Context, subnet *pb.Subnet) (*pb.SubnetResult, error) {
+	res := &pb.SubnetResult{}
+	res.Status = pb.ResultStatus_OK
 	err := s.context.Storage.RemoveIP(ctx, subnet.IPWithMask, internalapi.Blacklisted)
 	if err != nil {
-		res.Status = pb.OperationResult_FAIL
+		res.Status = pb.ResultStatus_FAIL
 		res.Reason = err.Error()
 	}
 	return res, nil
 }
 
-func (s *GrpcServer) AddWhitelist(ctx context.Context, subnet *pb.Subnet) (*pb.OperationResult, error) {
-	res := &pb.OperationResult{}
-	res.Status = pb.OperationResult_OK
+func (s *GrpcServer) AddWhitelist(ctx context.Context, subnet *pb.Subnet) (*pb.SubnetResult, error) {
+	res := &pb.SubnetResult{}
+	res.Status = pb.ResultStatus_OK
 	res.Reason = "AddWhitelist ok"
 	err := s.context.Storage.SetIP(ctx, subnet.IPWithMask, internalapi.Blacklisted)
 	if err != nil {
-		res.Status = pb.OperationResult_FAIL
+		res.Status = pb.ResultStatus_FAIL
 		res.Reason = err.Error()
 	}
 	return res, nil
 }
 
-func (s *GrpcServer) RemoveWhitelist(ctx context.Context, subnet *pb.Subnet) (*pb.OperationResult, error) {
-	res := &pb.OperationResult{}
-	res.Status = pb.OperationResult_OK
+func (s *GrpcServer) RemoveWhitelist(ctx context.Context, subnet *pb.Subnet) (*pb.SubnetResult, error) {
+	res := &pb.SubnetResult{}
+	res.Status = pb.ResultStatus_OK
 	res.Reason = "RemoveWhitelist ok"
 	err := s.context.Storage.RemoveIP(ctx, subnet.IPWithMask, internalapi.Blacklisted)
 	if err != nil {
-		res.Status = pb.OperationResult_FAIL
+		res.Status = pb.ResultStatus_FAIL
 		res.Reason = err.Error()
 	}
 	return res, nil

@@ -12,6 +12,8 @@ build:
 	go build -v -o ./bin ./cmd/limiter
 	go build -v -o ./bin ./cmd/cli
 
+cli:
+	./bin/cli
 
 db:
 	docker start redis || docker run -p 6379:6379 -d redis
@@ -39,5 +41,8 @@ create_run_container:
 
 run_docker:
 	docker run -dp 50051:50051 limiter
+
+compose:
+	docker-compose -f ./deploy/docker-compose.yml up
 
 .PHONY: generate build db test install-lint-deps lint run

@@ -4,15 +4,15 @@ package ratelimiter;
 option go_package = "./;pb";
 
 service Limiter {
-    rpc Validate(LoginAttempt) returns (AttemptResult);
-    rpc DropIPStats(Stats) returns (OperationResult);
-    rpc DropLoginStats(Stats) returns (OperationResult);
-    rpc DropPasswordStats(Stats) returns (OperationResult);
+    rpc Validate(LoginAttempt) returns (LoginResult);
+    rpc DropIPStats(Stats) returns (StatsResult);
+    rpc DropLoginStats(Stats) returns (StatsResult);
+    rpc DropPasswordStats(Stats) returns (StatsResult);
 
-    rpc AddBlacklist(Subnet) returns (OperationResult);
-    rpc RemoveBlacklist(Subnet) returns (OperationResult);
-    rpc AddWhitelist(Subnet) returns (OperationResult);
-    rpc RemoveWhitelist(Subnet) returns (OperationResult);
+    rpc AddBlacklist(Subnet) returns (SubnetResult);
+    rpc RemoveBlacklist(Subnet) returns (SubnetResult);
+    rpc AddWhitelist(Subnet) returns (SubnetResult);
+    rpc RemoveWhitelist(Subnet) returns (SubnetResult);
 }
 
 message LoginAttempt {
@@ -21,22 +21,6 @@ message LoginAttempt {
     string Password = 3;
 }
 
-message AttemptResult {
-    enum AttemptStatus {
-        OK = 0;
-        DENIED = 1;
-    }
-    AttemptStatus result = 1;
-}
-
-message OperationResult {
-    enum ResultStatus {
-        OK = 0;
-        FAIL = 1;
-    }
-    ResultStatus status = 1;
-    string reason = 2;
-}
 
 message Stats {
     string Data = 1;
@@ -44,4 +28,27 @@ message Stats {
 
 message Subnet {
     string IPWithMask = 1;
+}
+
+message LoginResult {
+    enum AttemptStatus {
+        OK = 0;
+        DENIED = 1;
+    }
+    AttemptStatus result = 1;
+}
+
+enum ResultStatus {
+    OK = 0;
+    FAIL = 1;
+}
+
+message StatsResult {
+    ResultStatus status = 1;
+    string reason = 2;
+}
+
+message SubnetResult {
+    ResultStatus status = 1;
+    string reason = 2;
 }

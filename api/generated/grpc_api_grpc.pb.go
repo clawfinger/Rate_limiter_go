@@ -18,14 +18,14 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type LimiterClient interface {
-	Validate(ctx context.Context, in *LoginAttempt, opts ...grpc.CallOption) (*AttemptResult, error)
-	DropIPStats(ctx context.Context, in *Stats, opts ...grpc.CallOption) (*OperationResult, error)
-	DropLoginStats(ctx context.Context, in *Stats, opts ...grpc.CallOption) (*OperationResult, error)
-	DropPasswordStats(ctx context.Context, in *Stats, opts ...grpc.CallOption) (*OperationResult, error)
-	AddBlacklist(ctx context.Context, in *Subnet, opts ...grpc.CallOption) (*OperationResult, error)
-	RemoveBlacklist(ctx context.Context, in *Subnet, opts ...grpc.CallOption) (*OperationResult, error)
-	AddWhitelist(ctx context.Context, in *Subnet, opts ...grpc.CallOption) (*OperationResult, error)
-	RemoveWhitelist(ctx context.Context, in *Subnet, opts ...grpc.CallOption) (*OperationResult, error)
+	Validate(ctx context.Context, in *LoginAttempt, opts ...grpc.CallOption) (*LoginResult, error)
+	DropIPStats(ctx context.Context, in *Stats, opts ...grpc.CallOption) (*StatsResult, error)
+	DropLoginStats(ctx context.Context, in *Stats, opts ...grpc.CallOption) (*StatsResult, error)
+	DropPasswordStats(ctx context.Context, in *Stats, opts ...grpc.CallOption) (*StatsResult, error)
+	AddBlacklist(ctx context.Context, in *Subnet, opts ...grpc.CallOption) (*SubnetResult, error)
+	RemoveBlacklist(ctx context.Context, in *Subnet, opts ...grpc.CallOption) (*SubnetResult, error)
+	AddWhitelist(ctx context.Context, in *Subnet, opts ...grpc.CallOption) (*SubnetResult, error)
+	RemoveWhitelist(ctx context.Context, in *Subnet, opts ...grpc.CallOption) (*SubnetResult, error)
 }
 
 type limiterClient struct {
@@ -36,8 +36,8 @@ func NewLimiterClient(cc grpc.ClientConnInterface) LimiterClient {
 	return &limiterClient{cc}
 }
 
-func (c *limiterClient) Validate(ctx context.Context, in *LoginAttempt, opts ...grpc.CallOption) (*AttemptResult, error) {
-	out := new(AttemptResult)
+func (c *limiterClient) Validate(ctx context.Context, in *LoginAttempt, opts ...grpc.CallOption) (*LoginResult, error) {
+	out := new(LoginResult)
 	err := c.cc.Invoke(ctx, "/ratelimiter.Limiter/Validate", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -45,8 +45,8 @@ func (c *limiterClient) Validate(ctx context.Context, in *LoginAttempt, opts ...
 	return out, nil
 }
 
-func (c *limiterClient) DropIPStats(ctx context.Context, in *Stats, opts ...grpc.CallOption) (*OperationResult, error) {
-	out := new(OperationResult)
+func (c *limiterClient) DropIPStats(ctx context.Context, in *Stats, opts ...grpc.CallOption) (*StatsResult, error) {
+	out := new(StatsResult)
 	err := c.cc.Invoke(ctx, "/ratelimiter.Limiter/DropIPStats", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -54,8 +54,8 @@ func (c *limiterClient) DropIPStats(ctx context.Context, in *Stats, opts ...grpc
 	return out, nil
 }
 
-func (c *limiterClient) DropLoginStats(ctx context.Context, in *Stats, opts ...grpc.CallOption) (*OperationResult, error) {
-	out := new(OperationResult)
+func (c *limiterClient) DropLoginStats(ctx context.Context, in *Stats, opts ...grpc.CallOption) (*StatsResult, error) {
+	out := new(StatsResult)
 	err := c.cc.Invoke(ctx, "/ratelimiter.Limiter/DropLoginStats", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -63,8 +63,8 @@ func (c *limiterClient) DropLoginStats(ctx context.Context, in *Stats, opts ...g
 	return out, nil
 }
 
-func (c *limiterClient) DropPasswordStats(ctx context.Context, in *Stats, opts ...grpc.CallOption) (*OperationResult, error) {
-	out := new(OperationResult)
+func (c *limiterClient) DropPasswordStats(ctx context.Context, in *Stats, opts ...grpc.CallOption) (*StatsResult, error) {
+	out := new(StatsResult)
 	err := c.cc.Invoke(ctx, "/ratelimiter.Limiter/DropPasswordStats", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -72,8 +72,8 @@ func (c *limiterClient) DropPasswordStats(ctx context.Context, in *Stats, opts .
 	return out, nil
 }
 
-func (c *limiterClient) AddBlacklist(ctx context.Context, in *Subnet, opts ...grpc.CallOption) (*OperationResult, error) {
-	out := new(OperationResult)
+func (c *limiterClient) AddBlacklist(ctx context.Context, in *Subnet, opts ...grpc.CallOption) (*SubnetResult, error) {
+	out := new(SubnetResult)
 	err := c.cc.Invoke(ctx, "/ratelimiter.Limiter/AddBlacklist", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -81,8 +81,8 @@ func (c *limiterClient) AddBlacklist(ctx context.Context, in *Subnet, opts ...gr
 	return out, nil
 }
 
-func (c *limiterClient) RemoveBlacklist(ctx context.Context, in *Subnet, opts ...grpc.CallOption) (*OperationResult, error) {
-	out := new(OperationResult)
+func (c *limiterClient) RemoveBlacklist(ctx context.Context, in *Subnet, opts ...grpc.CallOption) (*SubnetResult, error) {
+	out := new(SubnetResult)
 	err := c.cc.Invoke(ctx, "/ratelimiter.Limiter/RemoveBlacklist", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -90,8 +90,8 @@ func (c *limiterClient) RemoveBlacklist(ctx context.Context, in *Subnet, opts ..
 	return out, nil
 }
 
-func (c *limiterClient) AddWhitelist(ctx context.Context, in *Subnet, opts ...grpc.CallOption) (*OperationResult, error) {
-	out := new(OperationResult)
+func (c *limiterClient) AddWhitelist(ctx context.Context, in *Subnet, opts ...grpc.CallOption) (*SubnetResult, error) {
+	out := new(SubnetResult)
 	err := c.cc.Invoke(ctx, "/ratelimiter.Limiter/AddWhitelist", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -99,8 +99,8 @@ func (c *limiterClient) AddWhitelist(ctx context.Context, in *Subnet, opts ...gr
 	return out, nil
 }
 
-func (c *limiterClient) RemoveWhitelist(ctx context.Context, in *Subnet, opts ...grpc.CallOption) (*OperationResult, error) {
-	out := new(OperationResult)
+func (c *limiterClient) RemoveWhitelist(ctx context.Context, in *Subnet, opts ...grpc.CallOption) (*SubnetResult, error) {
+	out := new(SubnetResult)
 	err := c.cc.Invoke(ctx, "/ratelimiter.Limiter/RemoveWhitelist", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -112,14 +112,14 @@ func (c *limiterClient) RemoveWhitelist(ctx context.Context, in *Subnet, opts ..
 // All implementations must embed UnimplementedLimiterServer
 // for forward compatibility
 type LimiterServer interface {
-	Validate(context.Context, *LoginAttempt) (*AttemptResult, error)
-	DropIPStats(context.Context, *Stats) (*OperationResult, error)
-	DropLoginStats(context.Context, *Stats) (*OperationResult, error)
-	DropPasswordStats(context.Context, *Stats) (*OperationResult, error)
-	AddBlacklist(context.Context, *Subnet) (*OperationResult, error)
-	RemoveBlacklist(context.Context, *Subnet) (*OperationResult, error)
-	AddWhitelist(context.Context, *Subnet) (*OperationResult, error)
-	RemoveWhitelist(context.Context, *Subnet) (*OperationResult, error)
+	Validate(context.Context, *LoginAttempt) (*LoginResult, error)
+	DropIPStats(context.Context, *Stats) (*StatsResult, error)
+	DropLoginStats(context.Context, *Stats) (*StatsResult, error)
+	DropPasswordStats(context.Context, *Stats) (*StatsResult, error)
+	AddBlacklist(context.Context, *Subnet) (*SubnetResult, error)
+	RemoveBlacklist(context.Context, *Subnet) (*SubnetResult, error)
+	AddWhitelist(context.Context, *Subnet) (*SubnetResult, error)
+	RemoveWhitelist(context.Context, *Subnet) (*SubnetResult, error)
 	mustEmbedUnimplementedLimiterServer()
 }
 
@@ -127,28 +127,28 @@ type LimiterServer interface {
 type UnimplementedLimiterServer struct {
 }
 
-func (UnimplementedLimiterServer) Validate(context.Context, *LoginAttempt) (*AttemptResult, error) {
+func (UnimplementedLimiterServer) Validate(context.Context, *LoginAttempt) (*LoginResult, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Validate not implemented")
 }
-func (UnimplementedLimiterServer) DropIPStats(context.Context, *Stats) (*OperationResult, error) {
+func (UnimplementedLimiterServer) DropIPStats(context.Context, *Stats) (*StatsResult, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DropIPStats not implemented")
 }
-func (UnimplementedLimiterServer) DropLoginStats(context.Context, *Stats) (*OperationResult, error) {
+func (UnimplementedLimiterServer) DropLoginStats(context.Context, *Stats) (*StatsResult, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DropLoginStats not implemented")
 }
-func (UnimplementedLimiterServer) DropPasswordStats(context.Context, *Stats) (*OperationResult, error) {
+func (UnimplementedLimiterServer) DropPasswordStats(context.Context, *Stats) (*StatsResult, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DropPasswordStats not implemented")
 }
-func (UnimplementedLimiterServer) AddBlacklist(context.Context, *Subnet) (*OperationResult, error) {
+func (UnimplementedLimiterServer) AddBlacklist(context.Context, *Subnet) (*SubnetResult, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddBlacklist not implemented")
 }
-func (UnimplementedLimiterServer) RemoveBlacklist(context.Context, *Subnet) (*OperationResult, error) {
+func (UnimplementedLimiterServer) RemoveBlacklist(context.Context, *Subnet) (*SubnetResult, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveBlacklist not implemented")
 }
-func (UnimplementedLimiterServer) AddWhitelist(context.Context, *Subnet) (*OperationResult, error) {
+func (UnimplementedLimiterServer) AddWhitelist(context.Context, *Subnet) (*SubnetResult, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddWhitelist not implemented")
 }
-func (UnimplementedLimiterServer) RemoveWhitelist(context.Context, *Subnet) (*OperationResult, error) {
+func (UnimplementedLimiterServer) RemoveWhitelist(context.Context, *Subnet) (*SubnetResult, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveWhitelist not implemented")
 }
 func (UnimplementedLimiterServer) mustEmbedUnimplementedLimiterServer() {}

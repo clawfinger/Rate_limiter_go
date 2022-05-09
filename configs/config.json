@@ -13,7 +13,7 @@
     "level": "debug"
   },
   "redisdata": {
-    "addr": "localhost:6379",
+    "addr": "redis:6379",
     "optimeout": "500ms"
   }
 }

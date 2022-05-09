@@ -1,0 +1,21 @@
+version: "3.3"
+
+services:
+  redis:
+    networks:
+      - my-net
+    image: "redis"
+    ports:
+      - "6379:6379"
+  limiter:
+    image: "limiter"
+    networks:
+      - my-net
+    depends_on:
+      - redis
+    ports:
+      - "50051:50051"
+
+networks:
+  my-net:
+    driver: bridge
