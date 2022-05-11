@@ -14,266 +14,338 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// CalendarClient is the client API for Calendar service.
+// LimiterClient is the client API for Limiter service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type CalendarClient interface {
-	Validate(ctx context.Context, in *LoginAttempt, opts ...grpc.CallOption) (*AttemptResult, error)
-	DropStats(ctx context.Context, in *Stats, opts ...grpc.CallOption) (*OperationResult, error)
-	AppBlacklist(ctx context.Context, in *IP, opts ...grpc.CallOption) (*OperationResult, error)
-	RemoveBlacklist(ctx context.Context, in *IP, opts ...grpc.CallOption) (*OperationResult, error)
-	AppWhitelist(ctx context.Context, in *IP, opts ...grpc.CallOption) (*OperationResult, error)
-	RemoveWhitelist(ctx context.Context, in *IP, opts ...grpc.CallOption) (*OperationResult, error)
+type LimiterClient interface {
+	Validate(ctx context.Context, in *LoginAttempt, opts ...grpc.CallOption) (*LoginResult, error)
+	DropIPStats(ctx context.Context, in *Stats, opts ...grpc.CallOption) (*StatsResult, error)
+	DropLoginStats(ctx context.Context, in *Stats, opts ...grpc.CallOption) (*StatsResult, error)
+	DropPasswordStats(ctx context.Context, in *Stats, opts ...grpc.CallOption) (*StatsResult, error)
+	AddBlacklist(ctx context.Context, in *Subnet, opts ...grpc.CallOption) (*SubnetResult, error)
+	RemoveBlacklist(ctx context.Context, in *Subnet, opts ...grpc.CallOption) (*SubnetResult, error)
+	AddWhitelist(ctx context.Context, in *Subnet, opts ...grpc.CallOption) (*SubnetResult, error)
+	RemoveWhitelist(ctx context.Context, in *Subnet, opts ...grpc.CallOption) (*SubnetResult, error)
 }
 
-type calendarClient struct {
+type limiterClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewCalendarClient(cc grpc.ClientConnInterface) CalendarClient {
-	return &calendarClient{cc}
+func NewLimiterClient(cc grpc.ClientConnInterface) LimiterClient {
+	return &limiterClient{cc}
 }
 
-func (c *calendarClient) Validate(ctx context.Context, in *LoginAttempt, opts ...grpc.CallOption) (*AttemptResult, error) {
-	out := new(AttemptResult)
-	err := c.cc.Invoke(ctx, "/ratelimiter.Calendar/Validate", in, out, opts...)
+func (c *limiterClient) Validate(ctx context.Context, in *LoginAttempt, opts ...grpc.CallOption) (*LoginResult, error) {
+	out := new(LoginResult)
+	err := c.cc.Invoke(ctx, "/ratelimiter.Limiter/Validate", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *calendarClient) DropStats(ctx context.Context, in *Stats, opts ...grpc.CallOption) (*OperationResult, error) {
-	out := new(OperationResult)
-	err := c.cc.Invoke(ctx, "/ratelimiter.Calendar/DropStats", in, out, opts...)
+func (c *limiterClient) DropIPStats(ctx context.Context, in *Stats, opts ...grpc.CallOption) (*StatsResult, error) {
+	out := new(StatsResult)
+	err := c.cc.Invoke(ctx, "/ratelimiter.Limiter/DropIPStats", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *calendarClient) AppBlacklist(ctx context.Context, in *IP, opts ...grpc.CallOption) (*OperationResult, error) {
-	out := new(OperationResult)
-	err := c.cc.Invoke(ctx, "/ratelimiter.Calendar/AppBlacklist", in, out, opts...)
+func (c *limiterClient) DropLoginStats(ctx context.Context, in *Stats, opts ...grpc.CallOption) (*StatsResult, error) {
+	out := new(StatsResult)
+	err := c.cc.Invoke(ctx, "/ratelimiter.Limiter/DropLoginStats", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *calendarClient) RemoveBlacklist(ctx context.Context, in *IP, opts ...grpc.CallOption) (*OperationResult, error) {
-	out := new(OperationResult)
-	err := c.cc.Invoke(ctx, "/ratelimiter.Calendar/RemoveBlacklist", in, out, opts...)
+func (c *limiterClient) DropPasswordStats(ctx context.Context, in *Stats, opts ...grpc.CallOption) (*StatsResult, error) {
+	out := new(StatsResult)
+	err := c.cc.Invoke(ctx, "/ratelimiter.Limiter/DropPasswordStats", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *calendarClient) AppWhitelist(ctx context.Context, in *IP, opts ...grpc.CallOption) (*OperationResult, error) {
-	out := new(OperationResult)
-	err := c.cc.Invoke(ctx, "/ratelimiter.Calendar/AppWhitelist", in, out, opts...)
+func (c *limiterClient) AddBlacklist(ctx context.Context, in *Subnet, opts ...grpc.CallOption) (*SubnetResult, error) {
+	out := new(SubnetResult)
+	err := c.cc.Invoke(ctx, "/ratelimiter.Limiter/AddBlacklist", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *calendarClient) RemoveWhitelist(ctx context.Context, in *IP, opts ...grpc.CallOption) (*OperationResult, error) {
-	out := new(OperationResult)
-	err := c.cc.Invoke(ctx, "/ratelimiter.Calendar/RemoveWhitelist", in, out, opts...)
+func (c *limiterClient) RemoveBlacklist(ctx context.Context, in *Subnet, opts ...grpc.CallOption) (*SubnetResult, error) {
+	out := new(SubnetResult)
+	err := c.cc.Invoke(ctx, "/ratelimiter.Limiter/RemoveBlacklist", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// CalendarServer is the server API for Calendar service.
-// All implementations must embed UnimplementedCalendarServer
+func (c *limiterClient) AddWhitelist(ctx context.Context, in *Subnet, opts ...grpc.CallOption) (*SubnetResult, error) {
+	out := new(SubnetResult)
+	err := c.cc.Invoke(ctx, "/ratelimiter.Limiter/AddWhitelist", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *limiterClient) RemoveWhitelist(ctx context.Context, in *Subnet, opts ...grpc.CallOption) (*SubnetResult, error) {
+	out := new(SubnetResult)
+	err := c.cc.Invoke(ctx, "/ratelimiter.Limiter/RemoveWhitelist", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// LimiterServer is the server API for Limiter service.
+// All implementations must embed UnimplementedLimiterServer
 // for forward compatibility
-type CalendarServer interface {
-	Validate(context.Context, *LoginAttempt) (*AttemptResult, error)
-	DropStats(context.Context, *Stats) (*OperationResult, error)
-	AppBlacklist(context.Context, *IP) (*OperationResult, error)
-	RemoveBlacklist(context.Context, *IP) (*OperationResult, error)
-	AppWhitelist(context.Context, *IP) (*OperationResult, error)
-	RemoveWhitelist(context.Context, *IP) (*OperationResult, error)
-	mustEmbedUnimplementedCalendarServer()
+type LimiterServer interface {
+	Validate(context.Context, *LoginAttempt) (*LoginResult, error)
+	DropIPStats(context.Context, *Stats) (*StatsResult, error)
+	DropLoginStats(context.Context, *Stats) (*StatsResult, error)
+	DropPasswordStats(context.Context, *Stats) (*StatsResult, error)
+	AddBlacklist(context.Context, *Subnet) (*SubnetResult, error)
+	RemoveBlacklist(context.Context, *Subnet) (*SubnetResult, error)
+	AddWhitelist(context.Context, *Subnet) (*SubnetResult, error)
+	RemoveWhitelist(context.Context, *Subnet) (*SubnetResult, error)
+	mustEmbedUnimplementedLimiterServer()
 }
 
-// UnimplementedCalendarServer must be embedded to have forward compatible implementations.
-type UnimplementedCalendarServer struct {
+// UnimplementedLimiterServer must be embedded to have forward compatible implementations.
+type UnimplementedLimiterServer struct {
 }
 
-func (UnimplementedCalendarServer) Validate(context.Context, *LoginAttempt) (*AttemptResult, error) {
+func (UnimplementedLimiterServer) Validate(context.Context, *LoginAttempt) (*LoginResult, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Validate not implemented")
 }
-func (UnimplementedCalendarServer) DropStats(context.Context, *Stats) (*OperationResult, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DropStats not implemented")
+func (UnimplementedLimiterServer) DropIPStats(context.Context, *Stats) (*StatsResult, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DropIPStats not implemented")
 }
-func (UnimplementedCalendarServer) AppBlacklist(context.Context, *IP) (*OperationResult, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AppBlacklist not implemented")
+func (UnimplementedLimiterServer) DropLoginStats(context.Context, *Stats) (*StatsResult, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DropLoginStats not implemented")
 }
-func (UnimplementedCalendarServer) RemoveBlacklist(context.Context, *IP) (*OperationResult, error) {
+func (UnimplementedLimiterServer) DropPasswordStats(context.Context, *Stats) (*StatsResult, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DropPasswordStats not implemented")
+}
+func (UnimplementedLimiterServer) AddBlacklist(context.Context, *Subnet) (*SubnetResult, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddBlacklist not implemented")
+}
+func (UnimplementedLimiterServer) RemoveBlacklist(context.Context, *Subnet) (*SubnetResult, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveBlacklist not implemented")
 }
-func (UnimplementedCalendarServer) AppWhitelist(context.Context, *IP) (*OperationResult, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AppWhitelist not implemented")
+func (UnimplementedLimiterServer) AddWhitelist(context.Context, *Subnet) (*SubnetResult, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddWhitelist not implemented")
 }
-func (UnimplementedCalendarServer) RemoveWhitelist(context.Context, *IP) (*OperationResult, error) {
+func (UnimplementedLimiterServer) RemoveWhitelist(context.Context, *Subnet) (*SubnetResult, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveWhitelist not implemented")
 }
-func (UnimplementedCalendarServer) mustEmbedUnimplementedCalendarServer() {}
+func (UnimplementedLimiterServer) mustEmbedUnimplementedLimiterServer() {}
 
-// UnsafeCalendarServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to CalendarServer will
+// UnsafeLimiterServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to LimiterServer will
 // result in compilation errors.
-type UnsafeCalendarServer interface {
-	mustEmbedUnimplementedCalendarServer()
+type UnsafeLimiterServer interface {
+	mustEmbedUnimplementedLimiterServer()
 }
 
-func RegisterCalendarServer(s grpc.ServiceRegistrar, srv CalendarServer) {
-	s.RegisterService(&Calendar_ServiceDesc, srv)
+func RegisterLimiterServer(s grpc.ServiceRegistrar, srv LimiterServer) {
+	s.RegisterService(&Limiter_ServiceDesc, srv)
 }
 
-func _Calendar_Validate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Limiter_Validate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(LoginAttempt)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CalendarServer).Validate(ctx, in)
+		return srv.(LimiterServer).Validate(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ratelimiter.Calendar/Validate",
+		FullMethod: "/ratelimiter.Limiter/Validate",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CalendarServer).Validate(ctx, req.(*LoginAttempt))
+		return srv.(LimiterServer).Validate(ctx, req.(*LoginAttempt))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Calendar_DropStats_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Limiter_DropIPStats_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Stats)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CalendarServer).DropStats(ctx, in)
+		return srv.(LimiterServer).DropIPStats(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ratelimiter.Calendar/DropStats",
+		FullMethod: "/ratelimiter.Limiter/DropIPStats",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CalendarServer).DropStats(ctx, req.(*Stats))
+		return srv.(LimiterServer).DropIPStats(ctx, req.(*Stats))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Calendar_AppBlacklist_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(IP)
+func _Limiter_DropLoginStats_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Stats)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CalendarServer).AppBlacklist(ctx, in)
+		return srv.(LimiterServer).DropLoginStats(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ratelimiter.Calendar/AppBlacklist",
+		FullMethod: "/ratelimiter.Limiter/DropLoginStats",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CalendarServer).AppBlacklist(ctx, req.(*IP))
+		return srv.(LimiterServer).DropLoginStats(ctx, req.(*Stats))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Calendar_RemoveBlacklist_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(IP)
+func _Limiter_DropPasswordStats_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Stats)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CalendarServer).RemoveBlacklist(ctx, in)
+		return srv.(LimiterServer).DropPasswordStats(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ratelimiter.Calendar/RemoveBlacklist",
+		FullMethod: "/ratelimiter.Limiter/DropPasswordStats",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CalendarServer).RemoveBlacklist(ctx, req.(*IP))
+		return srv.(LimiterServer).DropPasswordStats(ctx, req.(*Stats))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Calendar_AppWhitelist_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(IP)
+func _Limiter_AddBlacklist_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Subnet)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CalendarServer).AppWhitelist(ctx, in)
+		return srv.(LimiterServer).AddBlacklist(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ratelimiter.Calendar/AppWhitelist",
+		FullMethod: "/ratelimiter.Limiter/AddBlacklist",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CalendarServer).AppWhitelist(ctx, req.(*IP))
+		return srv.(LimiterServer).AddBlacklist(ctx, req.(*Subnet))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Calendar_RemoveWhitelist_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(IP)
+func _Limiter_RemoveBlacklist_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Subnet)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CalendarServer).RemoveWhitelist(ctx, in)
+		return srv.(LimiterServer).RemoveBlacklist(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ratelimiter.Calendar/RemoveWhitelist",
+		FullMethod: "/ratelimiter.Limiter/RemoveBlacklist",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CalendarServer).RemoveWhitelist(ctx, req.(*IP))
+		return srv.(LimiterServer).RemoveBlacklist(ctx, req.(*Subnet))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// Calendar_ServiceDesc is the grpc.ServiceDesc for Calendar service.
+func _Limiter_AddWhitelist_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Subnet)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LimiterServer).AddWhitelist(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ratelimiter.Limiter/AddWhitelist",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LimiterServer).AddWhitelist(ctx, req.(*Subnet))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Limiter_RemoveWhitelist_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Subnet)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LimiterServer).RemoveWhitelist(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ratelimiter.Limiter/RemoveWhitelist",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LimiterServer).RemoveWhitelist(ctx, req.(*Subnet))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// Limiter_ServiceDesc is the grpc.ServiceDesc for Limiter service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var Calendar_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "ratelimiter.Calendar",
-	HandlerType: (*CalendarServer)(nil),
+var Limiter_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "ratelimiter.Limiter",
+	HandlerType: (*LimiterServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "Validate",
-			Handler:    _Calendar_Validate_Handler,
+			Handler:    _Limiter_Validate_Handler,
 		},
 		{
-			MethodName: "DropStats",
-			Handler:    _Calendar_DropStats_Handler,
+			MethodName: "DropIPStats",
+			Handler:    _Limiter_DropIPStats_Handler,
 		},
 		{
-			MethodName: "AppBlacklist",
-			Handler:    _Calendar_AppBlacklist_Handler,
+			MethodName: "DropLoginStats",
+			Handler:    _Limiter_DropLoginStats_Handler,
+		},
+		{
+			MethodName: "DropPasswordStats",
+			Handler:    _Limiter_DropPasswordStats_Handler,
+		},
+		{
+			MethodName: "AddBlacklist",
+			Handler:    _Limiter_AddBlacklist_Handler,
 		},
 		{
 			MethodName: "RemoveBlacklist",
-			Handler:    _Calendar_RemoveBlacklist_Handler,
+			Handler:    _Limiter_RemoveBlacklist_Handler,
 		},
 		{
-			MethodName: "AppWhitelist",
-			Handler:    _Calendar_AppWhitelist_Handler,
+			MethodName: "AddWhitelist",
+			Handler:    _Limiter_AddWhitelist_Handler,
 		},
 		{
 			MethodName: "RemoveWhitelist",
-			Handler:    _Calendar_RemoveWhitelist_Handler,
+			Handler:    _Limiter_RemoveWhitelist_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

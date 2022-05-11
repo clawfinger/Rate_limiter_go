@@ -8,4 +8,44 @@ generate:
 		--go-grpc_out=api/generated \
 		api/*.proto
 
-.PHONY: generate
+build:
+	go build -v -o ./bin ./cmd/limiter
+	go build -v -o ./bin ./cmd/cli
+
+cli:
+	./bin/cli
+
+db:
+	docker start redis || docker run -p 6379:6379 -d redis
+
+test:
+	go test ./tests -race -count 10
+
+install-lint-deps:
+	(which golangci-lint > /dev/null) || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.41.1
+
+lint: install-lint-deps
+	$(shell go env GOPATH)/bin/golangci-lint run ./...
+
+run:
+	./bin/limiter -c ./configs/config.json
+
+create_build_container:
+	docker build -f ./ci/Dockerfile_build -t build_image .
+
+build_in_docker:
+	docker run -v `pwd`:/service build_image
+
+create_run_container:
+	docker build -f ./deploy/Dockerfile . -t limiter
+
+run_docker:
+	docker run -dp 50051:50051 limiter
+
+compose_up:
+	docker-compose -f ./deploy/docker-compose.yml up
+
+compose_down:
+	docker-compose -f ./deploy/docker-compose.yml down
+
+.PHONY: generate build db test install-lint-deps lint run

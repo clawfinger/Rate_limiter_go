@@ -3,13 +3,16 @@ syntax = "proto3";
 package ratelimiter;
 option go_package = "./;pb";
 
-service Calendar {
-    rpc Validate(LoginAttempt) returns (AttemptResult);
-    rpc DropStats(Stats) returns (OperationResult);
-    rpc AppBlacklist(IP) returns (OperationResult);
-    rpc RemoveBlacklist(IP) returns (OperationResult);
-    rpc AppWhitelist(IP) returns (OperationResult);
-    rpc RemoveWhitelist(IP) returns (OperationResult);
+service Limiter {
+    rpc Validate(LoginAttempt) returns (LoginResult);
+    rpc DropIPStats(Stats) returns (StatsResult);
+    rpc DropLoginStats(Stats) returns (StatsResult);
+    rpc DropPasswordStats(Stats) returns (StatsResult);
+
+    rpc AddBlacklist(Subnet) returns (SubnetResult);
+    rpc RemoveBlacklist(Subnet) returns (SubnetResult);
+    rpc AddWhitelist(Subnet) returns (SubnetResult);
+    rpc RemoveWhitelist(Subnet) returns (SubnetResult);
 }
 
 message LoginAttempt {
@@ -18,7 +21,16 @@ message LoginAttempt {
     string Password = 3;
 }
 
-message AttemptResult {
+
+message Stats {
+    string Data = 1;
+}
+
+message Subnet {
+    string IPWithMask = 1;
+}
+
+message LoginResult {
     enum AttemptStatus {
         OK = 0;
         DENIED = 1;
@@ -26,20 +38,17 @@ message AttemptResult {
     AttemptStatus result = 1;
 }
 
-message OperationResult {
-    enum ResultStatus {
-        OK = 0;
-        FAIL = 1;
-    }
+enum ResultStatus {
+    OK = 0;
+    FAIL = 1;
+}
+
+message StatsResult {
     ResultStatus status = 1;
     string reason = 2;
 }
 
-message Stats {
-    string Login = 1;
-    string IP = 2;
-}
-
-message IP {
-    string IP = 1;
+message SubnetResult {
+    ResultStatus status = 1;
+    string reason = 2;
 }

@@ -1,15 +1,17 @@
 package config
 
 import (
+	"time"
+
 	"github.com/spf13/viper"
 )
 
 type Data struct {
-	DBData  DatabaseData
-	Logger  LoggerConf
-	Storage Storage
-	HTTP    HTTP
-	Grpc    Grpc
+	DBData    DatabaseData
+	Logger    LoggerConf
+	Grpc      Grpc
+	Buckets   Buckets
+	RedisData RedisData
 }
 
 func newConfigData() *Data {
@@ -18,19 +20,9 @@ func newConfigData() *Data {
 
 func (d *Data) SetDefault(v *viper.Viper) {
 	d.Logger.SetDefault(v)
-	d.Storage.SetDefault(v)
-	d.HTTP.SetDefault(v)
 	d.Grpc.SetDefault(v)
-}
-
-type HTTP struct {
-	Addr string
-}
-
-func (d *HTTP) SetDefault(v *viper.Viper) {
-	v.SetDefault("HTTP", map[string]interface{}{
-		"Addr": "127.0.0.1:8080",
-	})
+	d.Buckets.SetDefault(v)
+	d.RedisData.SetDefault(v)
 }
 
 type LoggerConf struct {
@@ -40,8 +32,8 @@ type LoggerConf struct {
 
 func (d *LoggerConf) SetDefault(v *viper.Viper) {
 	v.SetDefault("Logger", map[string]interface{}{
-		"Level":    "info",
-		"Filename": "calendar.log",
+		"Level":    "debug",
+		"Filename": "limiter.log",
 	})
 }
 
@@ -50,13 +42,15 @@ type DatabaseData struct {
 	Password string
 }
 
-type Storage struct {
-	Type string
+type RedisData struct {
+	Addr      string
+	OpTimeout time.Duration
 }
 
-func (d *Storage) SetDefault(v *viper.Viper) {
-	v.SetDefault("storage", map[string]interface{}{
-		"Type": "inmemory",
+func (d *RedisData) SetDefault(v *viper.Viper) {
+	v.SetDefault("RedisData", map[string]interface{}{
+		"Addr":      "redis:6379",
+		"OpTimeout": "500ms",
 	})
 }
 
@@ -66,6 +60,22 @@ type Grpc struct {
 
 func (d *Grpc) SetDefault(v *viper.Viper) {
 	v.SetDefault("Grpc", map[string]interface{}{
-		"Addr": "127.0.0.1:50051",
+		"Addr": ":50051",
+	})
+}
+
+type Buckets struct {
+	IPCapacity       uint
+	LoginCapacity    uint
+	PasswordCapacity uint
+	BucketDecayTime  time.Duration
+}
+
+func (b *Buckets) SetDefault(v *viper.Viper) {
+	v.SetDefault("Buckets", map[string]interface{}{
+		"IPCapacity":       "1000",
+		"LoginCapacity":    "10",
+		"PasswordCapacity": "100",
+		"BucketDecayTime":  "1m",
 	})
 }
