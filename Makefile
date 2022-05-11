@@ -42,7 +42,10 @@ create_run_container:
 run_docker:
 	docker run -dp 50051:50051 limiter
 
-compose:
+compose_up:
 	docker-compose -f ./deploy/docker-compose.yml up
+
+compose_down:
+	docker-compose -f ./deploy/docker-compose.yml down
 
 .PHONY: generate build db test install-lint-deps lint run
